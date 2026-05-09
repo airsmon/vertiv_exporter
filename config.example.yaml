@@ -1,0 +1,22 @@
+exporter:
+  listen_address: ":9101"
+  metrics_path: "/metrics"
+  scrape_timeout: 10s
+  debug_response: false
+
+targets:
+  - name: "dc-rack-01"
+    host: "https://192.168.1.100"
+    username: "admin"
+    password: "plain_password"
+    tls_skip_verify: true
+    devices:
+      - name: "AC1"
+        type: "ac"
+        equip_id: 23
+      - name: "ENV_THD"
+        type: "thd"
+        equip_id: -98
+      - name: "UPS_1"
+        type: "ups"
+        equip_id: 491

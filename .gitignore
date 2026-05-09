@@ -1,0 +1,20 @@
+# Local runtime config
+config.yaml
+
+# Go build and module caches used in this workspace
+.gocache/
+.gomodcache/
+
+# Go test / coverage artifacts
+*.test
+*.out
+coverage.out
+
+# Build outputs
+vertiv_exporter
+dist/
+build/
+bin/
+
+# OS/editor files
+.DS_Store
