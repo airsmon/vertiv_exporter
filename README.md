@@ -1,5 +1,7 @@
 # Vertiv RDU-A G2智能监控单元
 
+<img width="1919" height="1057" alt="iShot_2026-05-11_08 50 17" src="https://github.com/user-attachments/assets/04faf042-81a2-495f-9847-2b908a624b58" />
+
 Prometheus exporter for Vertiv devices through the Vertiv CGI interface.
 
 Current supported device families:
