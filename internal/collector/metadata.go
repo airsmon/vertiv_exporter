@@ -2,7 +2,6 @@ package collector
 
 import (
 	"bufio"
-	_ "embed"
 	"fmt"
 	"io"
 	"os"
@@ -13,9 +12,6 @@ import (
 
 var metricRowPattern = regexp.MustCompile("^\\| `([^`]+)` \\| ([0-9]+) \\| (.+?) \\|")
 
-//go:embed default_metrics.md
-var defaultMetrics string
-
 type MetricDefinition struct {
 	FieldID int
 	Name    string
@@ -24,12 +20,12 @@ type MetricDefinition struct {
 
 func LoadMetricDefinitions(path string) (map[int]MetricDefinition, error) {
 	if path == "" {
-		return loadMetricDefinitionsFromReader(strings.NewReader(defaultMetrics))
+		return loadDefaultMetricDefinitions(), nil
 	}
 
 	file, err := os.Open(path)
 	if err != nil {
-		return loadMetricDefinitionsFromReader(strings.NewReader(defaultMetrics))
+		return loadDefaultMetricDefinitions(), nil
 	}
 	defer file.Close()
 

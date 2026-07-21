@@ -2,6 +2,7 @@ exporter:
   listen_address: ":9101"
   metrics_path: "/metrics"
   scrape_timeout: 10s
+  metrics_file: ""
   debug_response: false
 
 targets:
@@ -19,4 +20,4 @@ targets:
         equip_id: -98
       - name: "UPS_1"
         type: "ups"
-        equip_id: 491
+        equip_id: 26

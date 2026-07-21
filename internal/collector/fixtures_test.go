@@ -101,7 +101,7 @@ func TestUPSFixtureEndToEnd(t *testing.T) {
 	}
 
 	col := &VertivCollector{upsDescs: newUPSDescs()}
-	metrics := col.buildDeviceMetrics("dc-rack-01", config.Device{Name: "UPS_1", Type: "ups", EquipID: 491}, samples)
+	metrics := col.buildDeviceMetrics("dc-rack-01", config.Device{Name: "UPS_1", Type: "ups", EquipID: 26}, samples)
 	if len(metrics) != 6 {
 		t.Fatalf("metric count = %d, want 6", len(metrics))
 	}

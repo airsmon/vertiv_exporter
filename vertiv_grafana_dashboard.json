@@ -2,24 +2,7 @@
   "apiVersion": "dashboard.grafana.app/v2",
   "kind": "Dashboard",
   "metadata": {
-    "name": "vertiv-dcim-monitor",
-    "namespace": "default",
-    "uid": "74f9b233-5471-4d5b-912a-d99904ecd40d",
-    "resourceVersion": "1778459174982002",
-    "generation": 8,
-    "creationTimestamp": "2026-05-10T23:49:03Z",
-    "labels": {
-      "grafana.app/deprecatedInternalID": "4485554071470080"
-    },
-    "annotations": {
-      "grafana.app/createdBy": "user:bfli55fb0g000a",
-      "grafana.app/folder": "bfli5el3sbmrkd",
-      "grafana.app/saved-from-ui": "Grafana v13.0.1 (a100054f)",
-      "grafana.app/updatedBy": "user:bfli55fb0g000a",
-      "grafana.app/updatedTimestamp": "2026-05-11T00:26:14Z",
-      "grafana.app/folderTitle": "维谛RDU-A G2智能监控单元",
-      "grafana.app/folderUrl": "/dashboards/f/bfli5el3sbmrkd/a4a5847"
-    }
+    "name": "vertiv-dcim-monitor"
   },
   "spec": {
     "annotations": [
@@ -66,7 +49,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_status_communication{instance=~\"$instance\"}",
@@ -165,7 +148,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_return_air_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -265,7 +248,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_input_energy_kwh_total{instance=~\"$instance\"}",
@@ -284,7 +267,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_output_energy_kwh_total{instance=~\"$instance\"}",
@@ -404,7 +387,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_input_frequency_hz{instance=~\"$instance\"}",
@@ -423,7 +406,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_output_frequency_hz{instance=~\"$instance\"}",
@@ -442,7 +425,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_bypass_frequency_hz{instance=~\"$instance\"}",
@@ -562,7 +545,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_battery_charge_current_amperes{instance=~\"$instance\"}",
@@ -581,7 +564,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_battery_negative_charge_current_amperes{instance=~\"$instance\"}",
@@ -600,7 +583,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_battery_discharge_current_amperes{instance=~\"$instance\"}",
@@ -619,7 +602,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_battery_negative_discharge_current_amperes{instance=~\"$instance\"}",
@@ -739,7 +722,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_thd_comm_status{instance=~\"$instance\"}",
@@ -839,7 +822,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_supply_air_mean_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -939,7 +922,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_airflow_temp{instance=~\"$instance\",device=~\"$device\"}",
@@ -959,7 +942,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_busbar_voltage_exception{instance=~\"$instance\",device=~\"$device\"}",
@@ -979,7 +962,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_compressor_drive_comm_fault{instance=~\"$instance\",device=~\"$device\"}",
@@ -999,7 +982,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_compressor_drive_failure{instance=~\"$instance\",device=~\"$device\"}",
@@ -1019,7 +1002,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_compressor_phase_failure{instance=~\"$instance\",device=~\"$device\"}",
@@ -1039,7 +1022,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_compressor_radiator_over_temp{instance=~\"$instance\",device=~\"$device\"}",
@@ -1059,7 +1042,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_eev_comm_fault{instance=~\"$instance\",device=~\"$device\"}",
@@ -1079,7 +1062,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_exhaust_high_temp{instance=~\"$instance\",device=~\"$device\"}",
@@ -1099,7 +1082,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_exhaust_superheat_low{instance=~\"$instance\",device=~\"$device\"}",
@@ -1119,7 +1102,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_exhaust_temp_sensor_fault{instance=~\"$instance\",device=~\"$device\"}",
@@ -1139,7 +1122,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_floor_overflow{instance=~\"$instance\",device=~\"$device\"}",
@@ -1159,7 +1142,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_high_voltage_lock{instance=~\"$instance\",device=~\"$device\"}",
@@ -1179,7 +1162,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_inspiratory_temp_sensor_fault{instance=~\"$instance\",device=~\"$device\"}",
@@ -1199,7 +1182,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_insufficient_refrigerant{instance=~\"$instance\",device=~\"$device\"}",
@@ -1219,7 +1202,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_low_voltage_lock{instance=~\"$instance\",device=~\"$device\"}",
@@ -1239,7 +1222,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_power_overvoltage{instance=~\"$instance\",device=~\"$device\"}",
@@ -1259,7 +1242,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_power_undervoltage{instance=~\"$instance\",device=~\"$device\"}",
@@ -1279,7 +1262,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_remote_shutdown{instance=~\"$instance\",device=~\"$device\"}",
@@ -1299,7 +1282,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_return_air_humidity{instance=~\"$instance\",device=~\"$device\"}",
@@ -1319,7 +1302,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_return_air_humidity_sensor_fault{instance=~\"$instance\",device=~\"$device\"}",
@@ -1339,7 +1322,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_return_air_low_humidity{instance=~\"$instance\",device=~\"$device\"}",
@@ -1359,7 +1342,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_return_air_temp_sensor_fault{instance=~\"$instance\",device=~\"$device\"}",
@@ -1477,7 +1460,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "editorMode": "code",
@@ -1579,7 +1562,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_humidity_return_air_percent{instance=~\"$instance\",device=~\"$device\"}",
@@ -1687,7 +1670,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_airflow_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -1787,7 +1770,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_return_air_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -1806,7 +1789,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_supply_air_mean_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -1825,7 +1808,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_return_air_setpoint_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -1946,7 +1929,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_humidity_return_air_percent{instance=~\"$instance\",device=~\"$device\"}",
@@ -1965,7 +1948,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_humidity_supply_air_current_percent{instance=~\"$instance\",device=~\"$device\"}",
@@ -1984,7 +1967,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_humidity_return_air_setpoint_percent{instance=~\"$instance\",device=~\"$device\"}",
@@ -2104,7 +2087,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_status_communication{instance=~\"$instance\"}",
@@ -2203,7 +2186,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_compressor_capacity_actual_percent{instance=~\"$instance\",device=~\"$device\"}",
@@ -2303,7 +2286,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_fan_speed_percent{instance=~\"$instance\",device=~\"$device\"}",
@@ -2403,7 +2386,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "editorMode": "code",
@@ -2492,7 +2475,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "editorMode": "code",
@@ -2581,7 +2564,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_compressor_capacity_actual_percent{instance=~\"$instance\",device=~\"$device\"}",
@@ -2600,7 +2583,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_fan_speed_percent{instance=~\"$instance\",device=~\"$device\"}",
@@ -2619,7 +2602,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_eev_opening_degree_percent{instance=~\"$instance\",device=~\"$device\"}",
@@ -2739,7 +2722,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_exhaust_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -2758,7 +2741,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_inspiratory_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -2777,7 +2760,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_exhaust_superheat_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -2898,7 +2881,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_status_power_supply{instance=~\"$instance\"}",
@@ -2997,7 +2980,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_electrical_voltage_phase_a_volts{instance=~\"$instance\",device=~\"$device\"}",
@@ -3016,7 +2999,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_electrical_voltage_phase_b_volts{instance=~\"$instance\",device=~\"$device\"}",
@@ -3035,7 +3018,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_electrical_voltage_phase_c_volts{instance=~\"$instance\",device=~\"$device\"}",
@@ -3155,7 +3138,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_electrical_frequency_hz{instance=~\"$instance\",device=~\"$device\"}",
@@ -3277,7 +3260,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_battery_capacity_percent{instance=~\"$instance\"}",
@@ -3366,7 +3349,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_input_phase_voltage_volts{instance=~\"$instance\"}",
@@ -3486,7 +3469,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_output_phase_voltage_volts{instance=~\"$instance\"}",
@@ -3606,7 +3589,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_output_current_amperes{instance=~\"$instance\"}",
@@ -3727,7 +3710,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_output_load_percent{instance=~\"$instance\"}",
@@ -3848,7 +3831,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_output_active_power_kilowatts{instance=~\"$instance\",scope=\"local\"}",
@@ -3969,7 +3952,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_battery_voltage_volts{instance=~\"$instance\"}",
@@ -3988,7 +3971,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_battery_negative_voltage_volts{instance=~\"$instance\"}",
@@ -4109,7 +4092,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_battery_capacity_percent{instance=~\"$instance\"}",
@@ -4128,7 +4111,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_battery_backup_time_minutes{instance=~\"$instance\"}",
@@ -4249,7 +4232,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_battery_backup_time_minutes{instance=~\"$instance\"}",
@@ -4336,7 +4319,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_thd_temperature_celsius{aisle=\"cool\",instance=~\"$instance\"}",
@@ -4461,7 +4444,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_thd_temperature_celsius{aisle=\"hot\",instance=~\"$instance\"}",
@@ -4580,7 +4563,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_thd_temperature_celsius{aisle=\"cool\",position=\"middle\",instance=~\"$instance\"}",
@@ -4701,7 +4684,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_thd_temperature_celsius{aisle=\"hot\",position=\"middle\",instance=~\"$instance\"}",
@@ -4822,7 +4805,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_thd_humidity_percent{aisle=\"cool\",instance=~\"$instance\"}",
@@ -4942,7 +4925,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_thd_humidity_percent{aisle=\"hot\",instance=~\"$instance\"}",
@@ -5062,7 +5045,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_thd_door_status{instance=~\"$instance\"}",
@@ -5168,7 +5151,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_system_alarm_active_count{instance=~\"$instance\"}",
@@ -5250,7 +5233,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_system_alarm_history_count{instance=~\"$instance\",device=~\"$device\"}",
@@ -5332,7 +5315,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_compressor_high_pressure_anomalies_total{instance=~\"$instance\",device=~\"$device\"}",
@@ -5414,7 +5397,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_thd_high_temp_alarm_rack_count{instance=~\"$instance\"}",
@@ -5496,7 +5479,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_battery_discharge_count_total{instance=~\"$instance\"}",
@@ -5578,7 +5561,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_airflow_loss{instance=~\"$instance\",device=~\"$device\"}",
@@ -5598,7 +5581,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_fan_failure{instance=~\"$instance\",device=~\"$device\"}",
@@ -5618,7 +5601,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_filter_plugging{instance=~\"$instance\",device=~\"$device\"}",
@@ -5638,7 +5621,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_compressor_overcurrent{instance=~\"$instance\",device=~\"$device\"}",
@@ -5658,7 +5641,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_high_voltage{instance=~\"$instance\",device=~\"$device\"}",
@@ -5678,7 +5661,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_low_voltage{instance=~\"$instance\",device=~\"$device\"}",
@@ -5698,7 +5681,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_power_loss{instance=~\"$instance\",device=~\"$device\"}",
@@ -5718,7 +5701,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_high_water{instance=~\"$instance\",device=~\"$device\"}",
@@ -5738,7 +5721,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_humidifier_fault{instance=~\"$instance\",device=~\"$device\"}",
@@ -5758,7 +5741,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_alarm_attr_return_air_temp{instance=~\"$instance\",device=~\"$device\"}",
@@ -5876,7 +5859,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_pressure_exhaust_bar{instance=~\"$instance\",device=~\"$device\"}",
@@ -5963,7 +5946,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_exhaust_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -6050,7 +6033,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "editorMode": "code",
@@ -6151,7 +6134,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "editorMode": "code",
@@ -6252,7 +6235,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_status_humidification{instance=~\"$instance\",device=~\"$device\"}",
@@ -6351,7 +6334,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_status_dehumidification{instance=~\"$instance\",device=~\"$device\"}",
@@ -6450,7 +6433,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_status_compressor_output{instance=~\"$instance\",device=~\"$device\"}",
@@ -6549,7 +6532,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_status_high_pressure_alarm{instance=~\"$instance\",device=~\"$device\"}",
@@ -6648,7 +6631,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_status_new_alarm_flag{instance=~\"$instance\",device=~\"$device\"}",
@@ -6747,7 +6730,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_status_remote_switch{instance=~\"$instance\",device=~\"$device\"}",
@@ -6846,7 +6829,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_supply_air_1_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -6865,7 +6848,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_supply_air_2_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -6884,7 +6867,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_supply_air_mean_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -6903,7 +6886,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_supply_air_setpoint_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -7023,7 +7006,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_inspiratory_superheat_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -7042,7 +7025,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_exhaust_superheat_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -7061,7 +7044,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_inspiratory_evaporation_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -7080,7 +7063,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_temperature_exhaust_condensing_celsius{instance=~\"$instance\",device=~\"$device\"}",
@@ -7200,7 +7183,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_compressor_capacity_actual_percent{instance=~\"$instance\",device=~\"$device\"}",
@@ -7219,7 +7202,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_compressor_capacity_output_percent{instance=~\"$instance\",device=~\"$device\"}",
@@ -7339,7 +7322,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_compressor_running_hours_total{instance=~\"$instance\",device=~\"$device\"}",
@@ -7358,7 +7341,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_fan_running_hours_total{instance=~\"$instance\",device=~\"$device\"}",
@@ -7377,7 +7360,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_pump_running_hours_total{instance=~\"$instance\",device=~\"$device\"}",
@@ -7497,7 +7480,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_compressor_startstop_records_total{instance=~\"$instance\",device=~\"$device\"}",
@@ -7516,7 +7499,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_fan_startstop_records_total{instance=~\"$instance\",device=~\"$device\"}",
@@ -7636,7 +7619,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_humidity_supply_air_current_percent{instance=~\"$instance\",device=~\"$device\"}",
@@ -7655,7 +7638,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ac_humidity_supply_air_theoretical_percent{instance=~\"$instance\",device=~\"$device\"}",
@@ -7775,7 +7758,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_status_battery{instance=~\"$instance\"}",
@@ -7874,7 +7857,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_status_charger{instance=~\"$instance\"}",
@@ -7973,7 +7956,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_status_input_power{instance=~\"$instance\"}",
@@ -8072,7 +8055,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_ambient_temperature_celsius{instance=~\"$instance\"}",
@@ -8159,7 +8142,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_running_time_days{instance=~\"$instance\"}",
@@ -8238,7 +8221,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_bypass_phase_voltage_volts{instance=~\"$instance\",phase=\"A\"}",
@@ -8257,7 +8240,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_bypass_phase_voltage_volts{instance=~\"$instance\",phase=\"B\"}",
@@ -8276,7 +8259,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_bypass_phase_voltage_volts{instance=~\"$instance\",phase=\"C\"}",
@@ -8396,7 +8379,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_input_line_voltage_volts{instance=~\"$instance\",line=\"AB\"}",
@@ -8415,7 +8398,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_input_line_voltage_volts{instance=~\"$instance\",line=\"BC\"}",
@@ -8434,7 +8417,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_input_line_voltage_volts{instance=~\"$instance\",line=\"CA\"}",
@@ -8554,7 +8537,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_input_current_amperes{instance=~\"$instance\",phase=\"A\"}",
@@ -8573,7 +8556,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_input_current_amperes{instance=~\"$instance\",phase=\"B\"}",
@@ -8592,7 +8575,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_input_current_amperes{instance=~\"$instance\",phase=\"C\"}",
@@ -8712,7 +8695,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_input_power_factor{instance=~\"$instance\",phase=\"A\"}",
@@ -8731,7 +8714,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_input_power_factor{instance=~\"$instance\",phase=\"B\"}",
@@ -8750,7 +8733,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_input_power_factor{instance=~\"$instance\",phase=\"C\"}",
@@ -8769,7 +8752,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_output_power_factor{instance=~\"$instance\",phase=\"A\"}",
@@ -8788,7 +8771,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_output_power_factor{instance=~\"$instance\",phase=\"B\"}",
@@ -8807,7 +8790,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_output_power_factor{instance=~\"$instance\",phase=\"C\"}",
@@ -8927,7 +8910,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_output_apparent_power_kva{instance=~\"$instance\",phase=\"A\",scope=\"system\"}",
@@ -8946,7 +8929,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_output_apparent_power_kva{instance=~\"$instance\",phase=\"B\",scope=\"system\"}",
@@ -8965,7 +8948,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffli58qcsq9s0c"
+                        "name": "$datasource"
                       },
                       "spec": {
                         "expr": "vertiv_ups_output_apparent_power_kva{instance=~\"$instance\",phase=\"C\",scope=\"system\"}",
@@ -10198,12 +10181,32 @@
     "title": "Vertiv 数据中心监控",
     "variables": [
       {
+        "kind": "DatasourceVariable",
+        "spec": {
+          "name": "datasource",
+          "pluginId": "prometheus",
+          "refresh": "onDashboardLoad",
+          "regex": "",
+          "current": {
+            "text": "",
+            "value": ""
+          },
+          "options": [],
+          "multi": false,
+          "includeAll": false,
+          "label": "Prometheus",
+          "hide": "dontHide",
+          "skipUrlSync": false,
+          "allowCustomValue": false
+        }
+      },
+      {
         "kind": "QueryVariable",
         "spec": {
           "name": "instance",
           "current": {
-            "text": "SH-SP-06-7",
-            "value": "SH-SP-06-7"
+            "text": "",
+            "value": ""
           },
           "label": "实例",
           "hide": "dontHide",
@@ -10214,7 +10217,7 @@
             "group": "prometheus",
             "version": "v0",
             "datasource": {
-              "name": "ffli58qcsq9s0c"
+              "name": "$datasource"
             },
             "spec": {
               "query": "label_values(vertiv_exporter_up, instance)",
@@ -10236,14 +10239,8 @@
         "spec": {
           "name": "device",
           "current": {
-            "text": [
-              "AC_1",
-              "AC_2"
-            ],
-            "value": [
-              "AC_1",
-              "AC_2"
-            ]
+            "text": "",
+            "value": ""
           },
           "label": "AC设备",
           "hide": "dontHide",
@@ -10254,7 +10251,7 @@
             "group": "prometheus",
             "version": "v0",
             "datasource": {
-              "name": "ffli58qcsq9s0c"
+              "name": "$datasource"
             },
             "spec": {
               "query": "label_values(vertiv_ac_status_communication{instance=~\"$instance\"}, device)",

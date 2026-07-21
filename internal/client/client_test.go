@@ -8,7 +8,7 @@ func TestEncodeCredential(t *testing.T) {
 		want string
 	}{
 		{raw: "admin", want: "YWRtaW4AAAAA"},
-		{raw: "VMaiJgUAs", want: "Vk1haUpnVUFz"},
+		{raw: "testpass9", want: "dGVzdHBhc3M5"},
 		{raw: "1234567890", want: "MTIzNDU2Nzg5MA"},
 	}
 

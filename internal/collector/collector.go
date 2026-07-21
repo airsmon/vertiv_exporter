@@ -32,6 +32,7 @@ type VertivCollector struct {
 	upDesc   *prometheus.Desc
 	duration prometheus.Histogram
 	errors   prometheus.Counter
+	ctx      context.Context
 	cancel   context.CancelFunc
 }
 
@@ -83,6 +84,7 @@ func New(parent context.Context, cfg *config.Config) (*VertivCollector, error) {
 			Name: "vertiv_exporter_scrape_failures_total",
 			Help: "Total scrape failures while querying Vertiv targets",
 		}),
+		ctx:    ctx,
 		cancel: cancel,
 	}
 
@@ -114,9 +116,8 @@ func (c *VertivCollector) Describe(ch chan<- *prometheus.Desc) {
 
 func (c *VertivCollector) Collect(ch chan<- prometheus.Metric) {
 	start := time.Now()
-	defer c.duration.Observe(time.Since(start).Seconds())
 
-	ctx, cancel := context.WithTimeout(context.Background(), c.config.Exporter.ScrapeTimeout)
+	ctx, cancel := context.WithTimeout(c.ctx, c.config.Exporter.ScrapeTimeout)
 	defer cancel()
 
 	var (
@@ -163,6 +164,7 @@ func (c *VertivCollector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(c.upDesc, prometheus.GaugeValue, up, instance)
 	}
 
+	c.duration.Observe(time.Since(start).Seconds())
 	c.duration.Collect(ch)
 	c.errors.Collect(ch)
 }

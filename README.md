@@ -29,14 +29,14 @@ Current supported device families:
 ## Project Layout
 
 ```text
-cmd/vertiv_exporter/        Program entrypoint
+Dockerfile                  Multi-stage, non-root container image
+.dockerignore               Minimal production build context allowlist
+config.example.yaml         Example exporter configuration
+vertiv_grafana_dashboard.json  Importable Grafana dashboard
+cmd/vertiv_exporter/        CLI entrypoint and HTTP server
 internal/client/            Login, keepalive, CGI fetching, response parsing
-internal/collector/         Prometheus collectors and device-specific mappings
+internal/collector/         Collector, built-in AC metadata, and THD/UPS mappings
 internal/config/            YAML config loader
-docs/vertiv_exporter_design.md  Design notes and captured response examples
-docs/vertiv_ac_metrics_list.md  AC metric reference
-docs/vertiv_thd_metrics_list.md THD metric reference
-docs/vertiv_ups_metrics_list.md UPS metric reference
 ```
 
 ## Configuration
@@ -48,13 +48,14 @@ exporter:
   listen_address: ":9101"
   metrics_path: "/metrics"
   scrape_timeout: 10s
+  metrics_file: ""
   debug_response: false
 
 targets:
   - name: "dc-rack-01"
     host: "https://vertiv.example.local"
-    username: "encoded_username"
-    password: "encoded_password"
+    username: "admin"
+    password: "plain_password"
     tls_skip_verify: true
     devices:
       - name: "AC_1"
@@ -65,26 +66,41 @@ targets:
         equip_id: -98
       - name: "UPS_1"
         type: "ups"
-        equip_id: 491
+        equip_id: 26
 ```
 
 ### Config Fields
 
+- `exporter.listen_address`: HTTP listen address; defaults to `:9101`
+- `exporter.metrics_path`: Prometheus endpoint; defaults to `/metrics`
+- `exporter.scrape_timeout`: timeout for one collector run across all targets; defaults to `10s`
+- `exporter.metrics_file`: optional Markdown file that overrides the built-in AC field mapping; an empty or unreadable path falls back to the built-in mapping
+- `exporter.debug_response`: when `true`, parse failures include the full CGI response body in logs
 - `target.name`: value used as the Prometheus `instance` label
 - `host`: Vertiv web base URL
 - `username` / `password`: plain-text login values; the exporter encodes them automatically before calling `login.cgi`
 - `tls_skip_verify`: useful for self-signed Vertiv HTTPS endpoints
-- `device.type`: recommended explicit device type, one of `ac`, `thd`, `ups`
+- `device.type`: device-family hint; use `ac`, `thd`, or `ups`
 - `device.equip_id`: CGI request `_equipId` value used for that device
-- `exporter.debug_response`: when `true`, parse failures include the full CGI response body in logs
+
+`metrics_path` must be an absolute non-root path without URL query/fragment, whitespace, repeated slashes, or `.`/`..` segments; one trailing slash is allowed. `scrape_timeout` must be positive, and target names must be unique.
 
 ### Device Type Notes
 
 - `ac` devices usually use positive `equip_id` values such as `23`, `24`
 - `thd` devices may use request IDs like `-98`
-- `ups` devices use their own request `equip_id`, for example `491`
+- `ups` devices use their own request `equip_id`, for example `26`; this can differ from an internal device code such as `491` in the response body
 
-If `type` is omitted, the exporter still has fallback detection heuristics, but explicit `type` is preferred.
+Mapping selection follows the implementation's precedence: `type: thd`, `equip_id: 5005`, or a name containing `THD` selects THD first; otherwise `type: ups` or a name containing `UPS` selects UPS; all remaining devices use AC. Use conventional names and set `type` explicitly to make the intended family clear.
+
+The IDs above are examples from one tested installation. Confirm the CGI request `_equipId` values for each target before deployment.
+
+### Credential Safety
+
+- The YAML file contains plain-text credentials. Keep `config.yaml` out of version control and restrict it to the exporter user, for example with `chmod 600 config.yaml`.
+- Mount credentials through a Docker/Kubernetes secret rather than baking them into an image.
+- Enable `tls_skip_verify` only for trusted internal endpoints whose certificate cannot be validated normally.
+- Keep `debug_response` disabled during normal operation because parse errors may include complete device responses.
 
 ## Login Behavior
 
@@ -107,18 +123,15 @@ Session keepalive uses `main_page_polling.cgi`.
 
 ## Metric Sources
 
-The exporter does **not** require `docs/vertiv_ac_metrics_list.md` at runtime for normal operation.
+AC metric metadata is defined directly in [default_metrics.go](internal/collector/default_metrics.go). THD and UPS mappings are implemented in [thd.go](internal/collector/thd.go) and [ups.go](internal/collector/ups.go).
 
-AC metric metadata is embedded in [default_metrics.md](/Users/airsmon/Documents/marisme/01_Projects/vertiv_exporter/internal/collector/default_metrics.md:1), so the binary and Docker image can run without `docs/vertiv_ac_metrics_list.md`.
+You can point `exporter.metrics_file` at a custom Markdown file when different AC field mappings are required. Without an override, the binary uses its built-in Go definitions and has no runtime documentation-file dependency.
 
-`docs/vertiv_ac_metrics_list.md` is only needed if you want it as a human-maintained reference, or if you explicitly point `exporter.metrics_file` at a custom override file.
+Each custom mapping row must contain the Prometheus metric name, numeric field ID, and help text:
 
-The same applies conceptually to:
-
-- `docs/vertiv_thd_metrics_list.md`
-- `docs/vertiv_ups_metrics_list.md`
-
-Those files are documentation sources, not required runtime inputs.
+```markdown
+| `vertiv_ac_temperature_return_air_celsius` | 2 | Return air temperature measurement |
+```
 
 ## Run
 
@@ -139,7 +152,7 @@ Build:
 
 ```bash
 mkdir -p .gocache .gomodcache
-GOCACHE=$(pwd)/.gocache GOMODCACHE=$(pwd)/.gomodcache GOPROXY=https://proxy.golang.org,direct go build ./...
+GOCACHE=$(pwd)/.gocache GOMODCACHE=$(pwd)/.gomodcache GOPROXY=https://proxy.golang.org,direct go build -o vertiv_exporter ./cmd/vertiv_exporter
 ```
 
 Start the exporter:
@@ -149,10 +162,27 @@ mkdir -p .gocache .gomodcache
 GOCACHE=$(pwd)/.gocache GOMODCACHE=$(pwd)/.gomodcache GOPROXY=https://proxy.golang.org,direct go run ./cmd/vertiv_exporter -config.file config.yaml
 ```
 
+Use `--version` to print the version, commit, and build date embedded at build time. The process handles `SIGINT` and `SIGTERM`, cancels in-flight scrapes, shuts down the HTTP server, and stops keepalive goroutines gracefully.
+
 Then open:
 
 - `http://127.0.0.1:9101/`
 - `http://127.0.0.1:9101/metrics`
+
+## Prometheus Configuration
+
+The Prometheus timeout should be longer than `exporter.scrape_timeout` so the exporter can report target failures cleanly:
+
+```yaml
+scrape_configs:
+  - job_name: "vertiv"
+    scrape_interval: 30s
+    scrape_timeout: 15s
+    static_configs:
+      - targets: ["vertiv-exporter:9101"]
+```
+
+Use `127.0.0.1:9101` when Prometheus and the exporter run directly on the same host. The example service name `vertiv-exporter:9101` works only when both containers share a network where that name resolves; otherwise replace it with the exporter address used by your deployment.
 
 ## Docker
 
@@ -172,6 +202,8 @@ Multi-platform build and push:
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
   --build-arg VERSION=1.0.0 \
+  --build-arg COMMIT=$(git rev-parse --short HEAD) \
+  --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
   -t your-registry/vertiv-exporter:1.0.0 \
   --push .
 ```
@@ -180,13 +212,28 @@ Run it with a mounted config file:
 
 ```bash
 docker run --rm -p 9101:9101 \
-  -v $(pwd)/config.yaml:/app/config.yaml:ro \
+  --user "$(id -u):$(id -g)" \
+  -v "$(pwd)/config.yaml:/app/config.yaml:ro" \
   vertiv-exporter:1.0.0
 ```
 
-The image expects the config file at `/app/config.yaml`.
+The image expects the config file at `/app/config.yaml`. The local example runs with the host UID/GID so a `chmod 600` bind-mounted config remains readable without making it world-readable. Secret or ConfigMap mounts can keep the image's default `nonroot` user when their permissions allow UID `65532` to read the file. If `exporter.metrics_file` is set, mount that override file separately as read-only and use its in-container path in `config.yaml`.
+
+The build context is restricted by `.dockerignore` to the build definition, `go.mod`, `go.sum`, and production Go source files. Local credentials, Git history, dashboards, documentation, tests, caches, and build artifacts are not sent to the Docker builder.
+
+## Grafana Dashboard
+
+`vertiv_grafana_dashboard.json` uses the Grafana dashboard v2 resource schema. Its Prometheus queries reference a `datasource` variable instead of an environment-specific data source UID, and its instance/device selections start empty. Select the target Prometheus data source after importing the dashboard.
+
+The checked-in resource intentionally omits server-managed UID, resource version, namespace, user, and folder metadata. Add the target namespace or folder annotation in the deployment environment when required.
 
 ## Supported Metric Groups
+
+Every device metric includes `instance`, `device`, and `equip_id`. THD and UPS metrics add the labels noted below. Exporter health is reported through:
+
+- `vertiv_exporter_up{instance}`: `1` when every configured device for the target was collected, otherwise `0`
+- `vertiv_exporter_scrape_duration_seconds`: histogram of complete collector run duration
+- `vertiv_exporter_scrape_failures_total`: total device fetch failures
 
 ### AC
 
@@ -217,7 +264,7 @@ THD temperature and humidity values are rounded to 2 decimal places before expor
 
 ## Notes and Optimizations
 
-- Explicit `device.type` is now supported and recommended. This avoids misclassification when device names vary.
+- Explicit `device.type` is supported and recommended so device intent remains clear when names vary.
 - THD metrics are label-merged instead of exploded into many independent metric names.
 - UPS metrics are field-id based and label-driven, which is more stable than parsing English field names.
 - Parse errors include a response preview to make field troubleshooting faster.

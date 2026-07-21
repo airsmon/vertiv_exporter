@@ -19,7 +19,7 @@ func TestBuildUPSMetrics(t *testing.T) {
 		25:  {FieldID: 25, Name: "Power Supply", Value: 1},
 	}
 
-	metrics := buildUPSMetrics(newUPSDescs(), "dc-rack-01", config.Device{Name: "UPS_1", EquipID: 491}, samples)
+	metrics := buildUPSMetrics(newUPSDescs(), "dc-rack-01", config.Device{Name: "UPS_1", EquipID: 26}, samples)
 	if len(metrics) != 6 {
 		t.Fatalf("metric count = %d, want 6", len(metrics))
 	}
@@ -27,7 +27,7 @@ func TestBuildUPSMetrics(t *testing.T) {
 
 func TestBuildDeviceMetricsForUPSProducesExpectedValues(t *testing.T) {
 	col := &VertivCollector{upsDescs: newUPSDescs()}
-	device := config.Device{Name: "UPS_1", EquipID: 491}
+	device := config.Device{Name: "UPS_1", EquipID: 26}
 	samples := map[int]client.Sample{
 		2:  {FieldID: 2, Name: "Phase A Input Voltage", Value: 217.800003},
 		73: {FieldID: 73, Name: "Battery Discharge Times", Value: 59},

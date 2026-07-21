@@ -11,7 +11,7 @@ config.yaml
 coverage.out
 
 # Build outputs
-vertiv_exporter
+/vertiv_exporter
 dist/
 build/
 bin/

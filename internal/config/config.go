@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 	"os"
+	pathpkg "path"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -56,14 +58,33 @@ func Load(path string) (*Config, error) {
 	if cfg.Exporter.ScrapeTimeout == 0 {
 		cfg.Exporter.ScrapeTimeout = 10 * time.Second
 	}
+	if cfg.Exporter.MetricsPath == "/" || !strings.HasPrefix(cfg.Exporter.MetricsPath, "/") {
+		return nil, fmt.Errorf("exporter.metrics_path must be an absolute path other than root")
+	}
+	if strings.ContainsAny(cfg.Exporter.MetricsPath, "?#{} \t\r\n") {
+		return nil, fmt.Errorf("exporter.metrics_path contains invalid characters")
+	}
+	cleanMetricsPath := pathpkg.Clean(cfg.Exporter.MetricsPath)
+	if cleanMetricsPath == "/" ||
+		(cfg.Exporter.MetricsPath != cleanMetricsPath && cfg.Exporter.MetricsPath != cleanMetricsPath+"/") {
+		return nil, fmt.Errorf("exporter.metrics_path must not contain repeated slashes or dot segments")
+	}
+	if cfg.Exporter.ScrapeTimeout < 0 {
+		return nil, fmt.Errorf("exporter.scrape_timeout must be positive")
+	}
 	if len(cfg.Targets) == 0 {
 		return nil, fmt.Errorf("config must define at least one target")
 	}
 
+	targetNames := make(map[string]struct{}, len(cfg.Targets))
 	for i, target := range cfg.Targets {
 		if target.Name == "" || target.Host == "" {
 			return nil, fmt.Errorf("target %d must define name and host", i)
 		}
+		if _, exists := targetNames[target.Name]; exists {
+			return nil, fmt.Errorf("target name %q must be unique", target.Name)
+		}
+		targetNames[target.Name] = struct{}{}
 		if len(target.Devices) == 0 {
 			return nil, fmt.Errorf("target %q must define at least one device", target.Name)
 		}
