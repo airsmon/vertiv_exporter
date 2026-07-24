@@ -34,6 +34,7 @@ Dockerfile                  Multi-stage, non-root container image
 .github/                    CI, GHCR publishing, dependency updates, and templates
 config.example.yaml         Example exporter configuration
 grafana/                    Standard Grafana dashboard and import guide
+packaging/systemd/          Hardened systemd service unit
 cmd/vertiv_exporter/        CLI entrypoint and HTTP server
 internal/client/            Login, keepalive, CGI fetching, response parsing
 internal/collector/         Collector, built-in AC metadata, and THD/UPS mappings
@@ -98,7 +99,7 @@ The IDs above are examples from one tested installation. Confirm the CGI request
 
 ### Credential Safety
 
-- The YAML file contains plain-text credentials. Keep `config.yaml` out of version control and restrict it to the exporter user, for example with `chmod 600 config.yaml`.
+- The YAML file contains plain-text credentials. Keep `config.yaml` out of version control. For direct execution, restrict it with `chmod 600 config.yaml`; for systemd, use the `root:vertiv_exporter` ownership and `0640` mode documented below.
 - Mount credentials through a Docker/Kubernetes secret rather than baking them into an image.
 - Enable `tls_skip_verify` only for trusted internal endpoints whose certificate cannot be validated normally.
 - Keep `debug_response` disabled during normal operation because parse errors may include complete device responses.
@@ -423,6 +424,93 @@ Then open:
 - `http://127.0.0.1:9101/`
 - `http://127.0.0.1:9101/metrics`
 
+## Binary Releases and Versioning
+
+Official versions follow semantic versioning and use a Git tag such as `v1.2.3` as the single version source. Prerelease tags such as `v1.2.3-rc.1` are supported. Build metadata suffixes such as `+build.1` are rejected so GitHub Release and OCI image tags remain identical. The release binary reports the tag version without the leading `v`, the full commit SHA, and the UTC commit time:
+
+```text
+vertiv_exporter version=1.2.3 commit=<full-commit-sha> build_date=<UTC-RFC3339>
+```
+
+An ordinary local `go build` keeps the development defaults `version=dev`, `commit=unknown`, and `build_date=unknown`. Every official release contains:
+
+- `vertiv_exporter-<version>.linux-amd64.tar.gz`
+- `vertiv_exporter-<version>.linux-arm64.tar.gz`
+- `sha256sums.txt`
+
+Download and verify a release on Linux:
+
+```bash
+RELEASE=v1.2.3
+ARCH=amd64 # use arm64 on 64-bit ARM systems
+PACKAGE="vertiv_exporter-${RELEASE#v}.linux-${ARCH}"
+
+curl -fLO "https://github.com/airsmon/vertiv_exporter/releases/download/${RELEASE}/${PACKAGE}.tar.gz"
+curl -fLO "https://github.com/airsmon/vertiv_exporter/releases/download/${RELEASE}/sha256sums.txt"
+grep -F "  ${PACKAGE}.tar.gz" sha256sums.txt | sha256sum --check -
+tar -xzf "${PACKAGE}.tar.gz"
+cd "${PACKAGE}"
+./vertiv_exporter --version
+```
+
+Each archive contains the binary, `config.example.yaml`, `vertiv_exporter.service`, and this README. To run the binary directly:
+
+```bash
+cp config.example.yaml config.yaml
+# Edit config.yaml before starting.
+./vertiv_exporter --config.file=config.yaml
+```
+
+## systemd
+
+The supplied unit runs the exporter as an unprivileged `vertiv_exporter` service account, reads `/etc/vertiv_exporter/config.yaml`, and starts `/usr/local/bin/vertiv_exporter`.
+
+From an extracted release archive, create the account and install the files:
+
+```bash
+sudo useradd --system --user-group --no-create-home \
+  --shell /usr/sbin/nologin vertiv_exporter
+sudo install -o root -g root -m 0755 \
+  vertiv_exporter /usr/local/bin/vertiv_exporter
+sudo install -d -o root -g vertiv_exporter -m 0750 /etc/vertiv_exporter
+sudo install -o root -g vertiv_exporter -m 0640 \
+  config.example.yaml /etc/vertiv_exporter/config.yaml
+sudo install -o root -g root -m 0644 \
+  vertiv_exporter.service /etc/systemd/system/vertiv_exporter.service
+sudoedit /etc/vertiv_exporter/config.yaml
+```
+
+If your distribution provides `nologin` at `/sbin/nologin`, use that path in the `useradd` command. systemd 245 or newer applies every hardening directive in the supplied unit; older releases may ignore unsupported directives with a warning.
+
+The configuration can contain credentials, so keep it owned by `root:vertiv_exporter` with mode `0640`. Put a custom `metrics_file` under `/etc/vertiv_exporter`, use an absolute path in the configuration, and apply the same ownership and mode.
+
+Enable the service and inspect its status:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now vertiv_exporter
+sudo systemctl status --no-pager vertiv_exporter
+sudo journalctl -u vertiv_exporter -f
+```
+
+After changing the configuration, restart the service because the exporter does not implement live reload:
+
+```bash
+sudo systemctl restart vertiv_exporter
+curl -fsS http://127.0.0.1:9101/metrics
+```
+
+To upgrade, download and verify the matching release first, then replace only the binary so the existing configuration remains intact:
+
+```bash
+sudo systemctl stop vertiv_exporter
+sudo install -o root -g root -m 0755 \
+  vertiv_exporter /usr/local/bin/vertiv_exporter
+/usr/local/bin/vertiv_exporter --version
+sudo systemctl start vertiv_exporter
+sudo systemctl status --no-pager vertiv_exporter
+```
+
 ## Prometheus Configuration
 
 The Prometheus timeout should be longer than `exporter.scrape_timeout` so the exporter can report target failures cleanly:
@@ -475,19 +563,19 @@ The image expects the config file at `/app/config.yaml`. The local example runs 
 
 The build context is restricted by `.dockerignore` to the build definition, `go.mod`, `go.sum`, and production Go source files. Local credentials, Git history, dashboards, documentation, tests, caches, and build artifacts are not sent to the Docker builder.
 
-## GitHub Automation and Container Images
+## GitHub CI, Releases, and Container Images
 
 The GitHub Actions CI runs Go formatting, module verification, `go vet`, race-enabled tests, and a versioned binary build for pull requests, pushes to `main`, and `v*` tags. It then builds and smoke-tests the container on both `linux/amd64` and `linux/arm64`.
 
 After all checks pass, pushes to `main` and `v*` tags publish a multi-platform image to:
 
 ```text
-ghcr.io/marismecom/vertiv_exporter
+ghcr.io/airsmon/vertiv_exporter
 ```
 
 The workflow uses the repository-provided `GITHUB_TOKEN`; no custom registry secret is required. A `main` push publishes `main` and `sha-*` tags. A stable tag such as `v1.2.3` publishes `v1.2.3`, `1.2.3`, `1.2`, `1`, `latest`, and `sha-*`; prerelease tags do not move `latest`.
 
-Create a release image by pushing a semantic version tag:
+After the tag image passes tests and is pushed successfully, the same workflow builds the Linux release archives, verifies their embedded version metadata and checksums, and creates a GitHub Release with generated notes. Create both the release image and binary release by pushing a semantic version tag:
 
 ```bash
 git tag v1.2.3
@@ -497,7 +585,7 @@ git push origin v1.2.3
 Pull the latest stable image with:
 
 ```bash
-docker pull ghcr.io/marismecom/vertiv_exporter:latest
+docker pull ghcr.io/airsmon/vertiv_exporter:latest
 ```
 
 The first published package may be private depending on the repository or organization defaults. Change its visibility in the package settings when public anonymous pulls are required.

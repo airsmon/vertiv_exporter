@@ -1,0 +1,41 @@
+[Unit]
+Description=Prometheus exporter for Vertiv devices
+Documentation=https://github.com/airsmon/vertiv_exporter
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=vertiv_exporter
+Group=vertiv_exporter
+WorkingDirectory=/etc/vertiv_exporter
+ExecStart=/usr/local/bin/vertiv_exporter --config.file=/etc/vertiv_exporter/config.yaml
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=15s
+
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RemoveIPC=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

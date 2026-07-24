@@ -53,7 +53,7 @@ ARG BUILD_DATE=unknown
 # OCI 标准镜像元数据
 LABEL org.opencontainers.image.title="vertiv-exporter" \
       org.opencontainers.image.description="Prometheus exporter for Vertiv modular cabinet" \
-      org.opencontainers.image.source="https://github.com/MarismeCom/vertiv_exporter" \
+      org.opencontainers.image.source="https://github.com/airsmon/vertiv_exporter" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.revision="${COMMIT}" \
       org.opencontainers.image.created="${BUILD_DATE}"
