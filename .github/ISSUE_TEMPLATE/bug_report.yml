@@ -1,0 +1,82 @@
+---
+name: Bug report
+description: Report a reproducible problem with Vertiv Exporter
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Remove credentials, private addresses,
+        session cookies, and other sensitive values before submitting.
+
+  - type: textarea
+    id: version
+    attributes:
+      label: Version
+      description: Paste the output of `vertiv_exporter --version` or the container image tag/digest.
+      placeholder: vertiv_exporter version=... commit=... build_date=...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment
+      options:
+        - Container image
+        - Standalone binary
+        - Go source
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Sanitized configuration
+      description: Include relevant exporter and device settings with credentials and private addresses removed.
+      render: yaml
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start the exporter with ...
+        2. Scrape ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or metrics
+      description: Remove credentials, cookies, tokens, and private device data.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I tested with the latest available release.
+          required: true
+        - label: I removed credentials and other sensitive information.
+          required: true

@@ -4,12 +4,16 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/sync/errgroup"
+	"golang.org/x/text/encoding/simplifiedchinese"
 
 	"vertiv_exporter/internal/client"
 	"vertiv_exporter/internal/config"
@@ -27,6 +31,7 @@ type VertivCollector struct {
 	targets  map[string]targetState
 	metrics  map[int]MetricDefinition
 	descs    map[int]*prometheus.Desc
+	acSignal *prometheus.Desc
 	thdDescs thdDescs
 	upsDescs upsDescs
 	upDesc   *prometheus.Desc
@@ -67,6 +72,7 @@ func New(parent context.Context, cfg *config.Config) (*VertivCollector, error) {
 		targets:  targets,
 		metrics:  metricDefs,
 		descs:    descs,
+		acSignal: newACSignalDesc(),
 		thdDescs: newTHDDescs(),
 		upsDescs: newUPSDescs(),
 		upDesc: prometheus.NewDesc(
@@ -95,6 +101,29 @@ func New(parent context.Context, cfg *config.Config) (*VertivCollector, error) {
 	return col, nil
 }
 
+func newACSignalDesc() *prometheus.Desc {
+	return prometheus.NewDesc(
+		"vertiv_ac_signal_value",
+		"Raw AC signal value reported by the Vertiv device",
+		[]string{"instance", "device", "equip_id", "signal_name", "occurrence"},
+		nil,
+	)
+}
+
+func normalizeACSignalName(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" || utf8.ValidString(raw) {
+		return raw
+	}
+
+	decoded, err := simplifiedchinese.GB18030.NewDecoder().String(raw)
+	if err == nil && utf8.ValidString(decoded) {
+		return strings.TrimSpace(decoded)
+	}
+
+	return strings.ToValidUTF8(raw, "\uFFFD")
+}
+
 func (c *VertivCollector) Close() {
 	c.cancel()
 }
@@ -103,6 +132,7 @@ func (c *VertivCollector) Describe(ch chan<- *prometheus.Desc) {
 	for _, desc := range c.descs {
 		ch <- desc
 	}
+	ch <- c.acSignal
 	for _, desc := range c.thdDescs.all() {
 		ch <- desc
 	}
@@ -177,8 +207,31 @@ func (c *VertivCollector) buildDeviceMetrics(instance string, device config.Devi
 		return buildUPSMetrics(c.upsDescs, instance, device, samples)
 	}
 
-	metrics := make([]prometheus.Metric, 0, len(samples))
-	for fieldID, sample := range samples {
+	fieldIDs := make([]int, 0, len(samples))
+	for fieldID := range samples {
+		fieldIDs = append(fieldIDs, fieldID)
+	}
+	sort.Ints(fieldIDs)
+
+	metrics := make([]prometheus.Metric, 0, len(samples)*2)
+	occurrences := make(map[string]int, len(samples))
+	for _, fieldID := range fieldIDs {
+		sample := samples[fieldID]
+		signalName := normalizeACSignalName(sample.Name)
+		if signalName != "" {
+			occurrences[signalName]++
+			metrics = append(metrics, prometheus.MustNewConstMetric(
+				c.acSignal,
+				prometheus.GaugeValue,
+				sample.Value,
+				instance,
+				device.Name,
+				strconv.Itoa(device.EquipID),
+				signalName,
+				strconv.Itoa(occurrences[signalName]),
+			))
+		}
+
 		desc, ok := c.descs[fieldID]
 		if !ok {
 			continue

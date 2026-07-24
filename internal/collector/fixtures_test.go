@@ -21,10 +21,13 @@ func TestACFixtureEndToEnd(t *testing.T) {
 		t.Fatalf("ParseSamples returned error: %v", err)
 	}
 
-	col := &VertivCollector{descs: mustACDescs(t)}
+	col := &VertivCollector{
+		descs:    mustACDescs(t),
+		acSignal: newACSignalDesc(),
+	}
 	metrics := col.buildDeviceMetrics("dc-rack-01", config.Device{Name: "AC_1", Type: "ac", EquipID: 23}, samples)
-	if len(metrics) != 4 {
-		t.Fatalf("metric count = %d, want 4", len(metrics))
+	if len(metrics) != 8 {
+		t.Fatalf("metric count = %d, want 8", len(metrics))
 	}
 
 	values := collectGaugeValues(t, metrics)
@@ -39,6 +42,64 @@ func TestACFixtureEndToEnd(t *testing.T) {
 	}
 	if got := values["vertiv_ac_status_compressor_output"]; got != 1 {
 		t.Fatalf("compressor output = %v, want 1", got)
+	}
+}
+
+func TestACRawSignalsIncludeUnmappedAndDuplicateNames(t *testing.T) {
+	raw := "3021,AC_1,ENP_AC_SRVII[COM]^2,Return air temperature measurement,28.600000,℃,1778314683,0,1,1,2,2;" +
+		"40,DIP switch value,1.000000,,1778314683,0,1,1,2,2;" +
+		"72,Air temperature alarm attribute,TurnON[2],,1778314683,0,1,1,0,5;" +
+		"73,Air temperature alarm attribute,TurnON[2],,1778314683,0,1,1,0,5;" +
+		"162,Compressor maximum capacity,125.000000,%,1778314683,0,1,1,2,2;" +
+		"163,Compressor maximum capacity,110.000000,%,1778314683,0,1,1,2,2;" +
+		"149,Fan remote \xa1\xf7 T,2.000000,℃,1778314683,0,1,1,2,2;"
+
+	samples, err := client.ParseSamples(raw)
+	if err != nil {
+		t.Fatalf("ParseSamples returned error: %v", err)
+	}
+
+	col := &VertivCollector{
+		descs:    mustACDescs(t),
+		acSignal: newACSignalDesc(),
+	}
+	metrics := col.buildDeviceMetrics("dc-rack-01", config.Device{Name: "AC_1", Type: "ac", EquipID: 23}, samples)
+
+	rawValues := make(map[string]float64)
+	for _, metric := range metrics {
+		if metricNameFromDesc(metric.Desc().String()) != "vertiv_ac_signal_value" {
+			continue
+		}
+
+		var pb dto.Metric
+		if err := metric.Write(&pb); err != nil {
+			t.Fatalf("write raw AC metric: %v", err)
+		}
+
+		labels := make(map[string]string, len(pb.GetLabel()))
+		for _, label := range pb.GetLabel() {
+			labels[label.GetName()] = label.GetValue()
+		}
+		rawValues[labels["signal_name"]+"/"+labels["occurrence"]] = pb.GetGauge().GetValue()
+	}
+
+	if got, want := len(rawValues), len(samples); got != want {
+		t.Fatalf("raw AC signal count = %d, want %d", got, want)
+	}
+	if got := rawValues["DIP switch value/1"]; got != 1 {
+		t.Fatalf("unmapped DIP switch value = %v, want 1", got)
+	}
+	if got := rawValues["Air temperature alarm attribute/2"]; got != 2 {
+		t.Fatalf("second duplicate alarm attribute = %v, want 2", got)
+	}
+	if got := rawValues["Compressor maximum capacity/1"]; got != 125 {
+		t.Fatalf("first compressor maximum capacity = %v, want 125", got)
+	}
+	if got := rawValues["Compressor maximum capacity/2"]; got != 110 {
+		t.Fatalf("second compressor maximum capacity = %v, want 110", got)
+	}
+	if got := rawValues["Fan remote △ T/1"]; got != 2 {
+		t.Fatalf("GB18030 signal name value = %v, want 2", got)
 	}
 }
 

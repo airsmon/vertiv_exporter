@@ -1,0 +1,39 @@
+---
+name: Feature request
+description: Suggest an improvement or additional Vertiv device support
+title: "[Feature] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What operational or monitoring problem should this change solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the desired behavior, metrics, labels, or configuration.
+    validations:
+      required: true
+
+  - type: textarea
+    id: device
+    attributes:
+      label: Device and protocol details
+      description: Include model/firmware and sanitized CGI samples when relevant.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: checkboxes
+    id: compatibility
+    attributes:
+      label: Compatibility
+      options:
+        - label: I considered metric-name and label compatibility for existing Prometheus users.
+          required: true

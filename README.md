@@ -31,8 +31,10 @@ Current supported device families:
 ```text
 Dockerfile                  Multi-stage, non-root container image
 .dockerignore               Minimal production build context allowlist
+.github/                    CI, GHCR publishing, dependency updates, and templates
 config.example.yaml         Example exporter configuration
-vertiv_grafana_dashboard.json  Importable Grafana dashboard
+grafana/                    Standard Grafana dashboard and import guide
+vertiv_grafana_dashboard.json  Legacy Grafana dashboard v2 resource
 cmd/vertiv_exporter/        CLI entrypoint and HTTP server
 internal/client/            Login, keepalive, CGI fetching, response parsing
 internal/collector/         Collector, built-in AC metadata, and THD/UPS mappings
@@ -133,6 +135,259 @@ Each custom mapping row must contain the Prometheus metric name, numeric field I
 | `vertiv_ac_temperature_return_air_celsius` | 2 | Return air temperature measurement |
 ```
 
+## 指标说明
+
+以下清单以当前代码的默认内置定义为准。所有设备指标都包含 `instance`、`device`、`equip_id`；其中 `instance` 是配置中的 Vertiv target 名称。若配置了 `exporter.metrics_file`，其中的 AC 字段映射会替换下列 181 个内置语义 AC 指标，`vertiv_ac_signal_value` 不受影响。
+
+### ENV_THD（环境阈值）
+
+共 6 个指标。温度和湿度在导出前保留两位小数；机柜、通道和位置 Label 会随设备返回的传感器拓扑动态变化。
+
+| 指标名 | 类型（Gauge/Counter） | 单位 | Label | 说明 |
+| --- | --- | --- | --- | --- |
+| `vertiv_thd_temperature_celsius` | Gauge | °C | `instance`, `device`, `equip_id`, `rack`, `aisle`, `position` | 通道温度；`rack`、`aisle`、`position` 从设备返回的传感器名称动态解析。 |
+| `vertiv_thd_humidity_percent` | Gauge | % | `instance`, `device`, `equip_id`, `rack`, `aisle` | 通道湿度；`rack`、`aisle` 从设备返回的传感器名称动态解析。 |
+| `vertiv_thd_door_status` | Gauge | — | `instance`, `device`, `equip_id`, `rack`, `aisle` | 通道门状态（0=正常，1=打开/异常）；`rack`、`aisle` 为动态 Label。 |
+| `vertiv_thd_comm_status` | Gauge | — | `instance`, `device`, `equip_id`, `rack` | THD 传感器通信状态（0=正常，1=故障）；`rack` 为动态 Label。 |
+| `vertiv_thd_rack_id` | Gauge | — | `instance`, `device`, `equip_id`, `rack` | Vertiv THD 子系统的机柜标识映射；`rack` 为动态 Label。 |
+| `vertiv_thd_high_temp_alarm_rack_count` | Gauge | 个 | `instance`, `device`, `equip_id` | 当前存在高温告警的机柜数量。 |
+
+### UPS
+
+共 40 个指标。`phase` 的值为 `A/B/C`，`line` 的值为 `AB/BC/CA`，`scope` 的值为 `local/system`；这些 Label 由字段 ID 映射生成。
+
+| 指标名 | 类型（Gauge/Counter） | 单位 | Label | 说明 |
+| --- | --- | --- | --- | --- |
+| `vertiv_ups_input_phase_voltage_volts` | Gauge | V | `instance`, `device`, `equip_id`, `phase` | UPS input phase voltage |
+| `vertiv_ups_input_line_voltage_volts` | Gauge | V | `instance`, `device`, `equip_id`, `line` | UPS input line voltage |
+| `vertiv_ups_input_current_amperes` | Gauge | A | `instance`, `device`, `equip_id`, `phase` | UPS input current |
+| `vertiv_ups_input_frequency_hz` | Gauge | Hz | `instance`, `device`, `equip_id` | UPS input frequency |
+| `vertiv_ups_input_power_factor` | Gauge | — | `instance`, `device`, `equip_id`, `phase` | UPS input power factor |
+| `vertiv_ups_bypass_phase_voltage_volts` | Gauge | V | `instance`, `device`, `equip_id`, `phase` | UPS bypass phase voltage |
+| `vertiv_ups_bypass_line_voltage_volts` | Gauge | V | `instance`, `device`, `equip_id`, `line` | UPS bypass line voltage |
+| `vertiv_ups_bypass_frequency_hz` | Gauge | Hz | `instance`, `device`, `equip_id` | UPS bypass frequency |
+| `vertiv_ups_output_phase_voltage_volts` | Gauge | V | `instance`, `device`, `equip_id`, `phase` | UPS output phase voltage |
+| `vertiv_ups_output_current_amperes` | Gauge | A | `instance`, `device`, `equip_id`, `phase` | UPS output current |
+| `vertiv_ups_output_frequency_hz` | Gauge | Hz | `instance`, `device`, `equip_id` | UPS output frequency |
+| `vertiv_ups_output_power_factor` | Gauge | — | `instance`, `device`, `equip_id`, `phase` | UPS output power factor |
+| `vertiv_ups_output_active_power_kilowatts` | Gauge | kW | `instance`, `device`, `equip_id`, `scope`, `phase` | UPS output active power |
+| `vertiv_ups_output_apparent_power_kva` | Gauge | kVA | `instance`, `device`, `equip_id`, `scope`, `phase` | UPS output apparent power |
+| `vertiv_ups_output_load_percent` | Gauge | % | `instance`, `device`, `equip_id`, `phase` | UPS output load percentage per phase |
+| `vertiv_ups_battery_voltage_volts` | Gauge | V | `instance`, `device`, `equip_id` | UPS battery positive group voltage |
+| `vertiv_ups_battery_negative_voltage_volts` | Gauge | V | `instance`, `device`, `equip_id` | UPS battery negative group voltage |
+| `vertiv_ups_battery_charge_current_amperes` | Gauge | A | `instance`, `device`, `equip_id` | UPS battery positive group charge current |
+| `vertiv_ups_battery_discharge_current_amperes` | Gauge | A | `instance`, `device`, `equip_id` | UPS battery positive group discharge current |
+| `vertiv_ups_battery_negative_charge_current_amperes` | Gauge | A | `instance`, `device`, `equip_id` | UPS battery negative group charge current |
+| `vertiv_ups_battery_negative_discharge_current_amperes` | Gauge | A | `instance`, `device`, `equip_id` | UPS battery negative group discharge current |
+| `vertiv_ups_battery_capacity_percent` | Gauge | % | `instance`, `device`, `equip_id` | UPS battery state of charge |
+| `vertiv_ups_battery_backup_time_minutes` | Gauge | min | `instance`, `device`, `equip_id` | Estimated UPS battery backup time |
+| `vertiv_ups_battery_discharging_time_seconds` | Gauge | s | `instance`, `device`, `equip_id` | UPS cumulative battery discharging time |
+| `vertiv_ups_battery_discharge_count_total` | Counter | 次 | `instance`, `device`, `equip_id` | UPS cumulative battery discharge count |
+| `vertiv_ups_input_energy_kwh_total` | Counter | kWh | `instance`, `device`, `equip_id` | Total UPS input energy |
+| `vertiv_ups_output_energy_kwh_total` | Counter | kWh | `instance`, `device`, `equip_id` | Total UPS output energy |
+| `vertiv_ups_ambient_temperature_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | UPS ambient temperature |
+| `vertiv_ups_running_time_days` | Gauge | d | `instance`, `device`, `equip_id` | UPS running time in days |
+| `vertiv_ups_parallel_machine_count` | Gauge | 个 | `instance`, `device`, `equip_id` | UPS parallel machine count |
+| `vertiv_ups_status_power_supply` | Gauge | — | `instance`, `device`, `equip_id` | UPS power supply status (1=Utility Online) |
+| `vertiv_ups_status_input_power` | Gauge | — | `instance`, `device`, `equip_id` | UPS input power status |
+| `vertiv_ups_status_battery` | Gauge | — | `instance`, `device`, `equip_id` | UPS battery status |
+| `vertiv_ups_status_battery_negative_group` | Gauge | — | `instance`, `device`, `equip_id` | UPS negative battery group status |
+| `vertiv_ups_status_charger` | Gauge | — | `instance`, `device`, `equip_id` | UPS charger status |
+| `vertiv_ups_status_parallel_system_power` | Gauge | — | `instance`, `device`, `equip_id` | UPS parallel system power state |
+| `vertiv_ups_status_inner_network` | Gauge | — | `instance`, `device`, `equip_id` | UPS inner network connection status |
+| `vertiv_ups_status_communication` | Gauge | — | `instance`, `device`, `equip_id` | UPS communication status |
+| `vertiv_ups_status_input_phase_number` | Gauge | — | `instance`, `device`, `equip_id` | UPS input phase number |
+| `vertiv_ups_status_output_phase_number` | Gauge | — | `instance`, `device`, `equip_id` | UPS output phase number |
+
+### AC
+
+共 182 个指标（181 个内置语义指标 + 1 个原始信号指标）。内置语义指标统一使用 `instance`、`device`、`equip_id`；原始信号额外使用动态 `signal_name` 和 `occurrence`。当前实现将所有 AC 指标按 Gauge 导出，包括名称以 `_total` 结尾的累计值。
+
+| 指标名 | 类型（Gauge/Counter） | 单位 | Label | 说明 |
+| --- | --- | --- | --- | --- |
+| `vertiv_ac_temperature_return_air_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Return air temperature measurement |
+| `vertiv_ac_temperature_supply_air_1_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Air supply temperature 1 measured value |
+| `vertiv_ac_temperature_supply_air_2_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Air supply temperature 2 measured value |
+| `vertiv_ac_temperature_supply_air_mean_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Mean temperature measurement of Supply Air |
+| `vertiv_ac_temperature_supply_air_setpoint_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Supply Air temperature setting |
+| `vertiv_ac_temperature_airflow_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Air temperature measurement |
+| `vertiv_ac_temperature_exhaust_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Exhaust temperature measurement |
+| `vertiv_ac_temperature_inspiratory_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Inspiratory temperature measurement |
+| `vertiv_ac_temperature_inspiratory_evaporation_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Inspiratory evaporation temperature |
+| `vertiv_ac_temperature_exhaust_condensing_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Exhaust condensing temperature |
+| `vertiv_ac_temperature_inspiratory_superheat_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Inspiratory superheat |
+| `vertiv_ac_temperature_exhaust_superheat_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Exhaust superheat |
+| `vertiv_ac_temperature_return_air_setpoint_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Return air temperature setting |
+| `vertiv_ac_temperature_remote_setpoint_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Remote temperature setting |
+| `vertiv_ac_temperature_airflow_alarm_value_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Air temperature alarm value |
+| `vertiv_ac_temperature_low_alarm_value_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Low temperature alarm value |
+| `vertiv_ac_temperature_return_air_alarm_value_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Return air temperature alarm value |
+| `vertiv_ac_temperature_airflow_loss_alarm_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Airflow loss temperature alarm value |
+| `vertiv_ac_temperature_dead_zone_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Temperature dead zone |
+| `vertiv_ac_temperature_dehumid_stop_diff_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Dehumidification stop temperature difference |
+| `vertiv_ac_temperature_eev_superheat_setpoint_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | EEV superheat setting |
+| `vertiv_ac_temperature_eev_close_superheat_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | The EEV valve closes the superheat |
+| `vertiv_ac_temperature_remote_1_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Remote temperature 1 measurements |
+| `vertiv_ac_temperature_remote_2_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Remote temperature 2 measurements |
+| `vertiv_ac_temperature_remote_3_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Remote temperature 3 measurements |
+| `vertiv_ac_temperature_remote_avg_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Remote average temperature |
+| `vertiv_ac_temperature_supply_air_1_correction_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Air supply temperature 1 correction value |
+| `vertiv_ac_temperature_supply_air_2_correction_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Air supply temperature 2 correction value |
+| `vertiv_ac_temperature_return_air_correction_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Return air temperature correction value |
+| `vertiv_ac_temperature_airflow_correction_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Airflow temperature correction value |
+| `vertiv_ac_temperature_exhaust_correction_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Exhaust temperature correction value |
+| `vertiv_ac_temperature_inspiratory_correction_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Inspiratory temperature correction value |
+| `vertiv_ac_humidity_return_air_percent` | Gauge | % | `instance`, `device`, `equip_id` | Return air humidity measurement |
+| `vertiv_ac_humidity_return_air_setpoint_percent` | Gauge | % | `instance`, `device`, `equip_id` | Humidity setting |
+| `vertiv_ac_humidity_ratio_percent` | Gauge | % | `instance`, `device`, `equip_id` | Humidity ratio |
+| `vertiv_ac_humidity_supply_air_theoretical_percent` | Gauge | % | `instance`, `device`, `equip_id` | Theoretical air supply humidity |
+| `vertiv_ac_humidity_supply_air_current_percent` | Gauge | % | `instance`, `device`, `equip_id` | Current air supply humidity |
+| `vertiv_ac_humidity_dead_zone_percent` | Gauge | % | `instance`, `device`, `equip_id` | Humidity dead zone |
+| `vertiv_ac_humidity_return_air_high_alarm_percent` | Gauge | % | `instance`, `device`, `equip_id` | Return wind high humidity alarm value |
+| `vertiv_ac_humidity_return_air_low_alarm_percent` | Gauge | % | `instance`, `device`, `equip_id` | Return air low warning value |
+| `vertiv_ac_humidity_return_air_correction_percent` | Gauge | % | `instance`, `device`, `equip_id` | Return air humidity correction value |
+| `vertiv_ac_pressure_exhaust_bar` | Gauge | bar | `instance`, `device`, `equip_id` | Exhaust pressure measurement |
+| `vertiv_ac_pressure_inspiratory_bar` | Gauge | bar | `instance`, `device`, `equip_id` | Inspiratory pressure measurement |
+| `vertiv_ac_pressure_exhaust_correction_bar` | Gauge | bar | `instance`, `device`, `equip_id` | Exhaust pressure correction value |
+| `vertiv_ac_pressure_inspiratory_correction_bar` | Gauge | bar | `instance`, `device`, `equip_id` | Inspiratory pressure correction value |
+| `vertiv_ac_pressure_eev_mop_limit_bar` | Gauge | bar | `instance`, `device`, `equip_id` | EEV MOP pressure limit |
+| `vertiv_ac_pressure_fan_max_speed_low_point_bar` | Gauge | bar | `instance`, `device`, `equip_id` | Fan maximum speed low pressure point |
+| `vertiv_ac_pressure_fan_speed_low_point_bar` | Gauge | bar | `instance`, `device`, `equip_id` | Fan speed low point |
+| `vertiv_ac_pressure_fan_down_low_point_bar` | Gauge | bar | `instance`, `device`, `equip_id` | Fan down the low pressure point |
+| `vertiv_ac_pressure_fan_min_speed_bar` | Gauge | bar | `instance`, `device`, `equip_id` | Minimum speed of the fan |
+| `vertiv_ac_pressure_comp_min_output_bar` | Gauge | bar | `instance`, `device`, `equip_id` | Compressor minimum output low pressure point |
+| `vertiv_ac_pressure_comp_capacity_reduce_bar` | Gauge | bar | `instance`, `device`, `equip_id` | Compressor capacity reduces low pressure point |
+| `vertiv_ac_pressure_comp_capacity_increase_bar` | Gauge | bar | `instance`, `device`, `equip_id` | Compressor capacity increases low pressure point |
+| `vertiv_ac_pressure_comp_max_output_bar` | Gauge | bar | `instance`, `device`, `equip_id` | Compressor maximum output low pressure point |
+| `vertiv_ac_electrical_voltage_phase_a_volts` | Gauge | V | `instance`, `device`, `equip_id` | Phase A voltage |
+| `vertiv_ac_electrical_voltage_phase_b_volts` | Gauge | V | `instance`, `device`, `equip_id` | B phase voltage |
+| `vertiv_ac_electrical_voltage_phase_c_volts` | Gauge | V | `instance`, `device`, `equip_id` | C phase voltage |
+| `vertiv_ac_electrical_frequency_hz` | Gauge | Hz | `instance`, `device`, `equip_id` | Power frequency |
+| `vertiv_ac_electrical_overvoltage_alarm_percent` | Gauge | % | `instance`, `device`, `equip_id` | Power overrun alarm value |
+| `vertiv_ac_electrical_undervoltage_alarm_percent` | Gauge | % | `instance`, `device`, `equip_id` | Power undervoltage alarm value |
+| `vertiv_ac_compressor_capacity_actual_percent` | Gauge | % | `instance`, `device`, `equip_id` | Compressor capacity actual value |
+| `vertiv_ac_compressor_capacity_output_percent` | Gauge | % | `instance`, `device`, `equip_id` | Compressor capacity output value |
+| `vertiv_ac_compressor_min_runtime_minutes` | Gauge | min | `instance`, `device`, `equip_id` | Compressor shortest running time |
+| `vertiv_ac_compressor_min_downtime_minutes` | Gauge | min | `instance`, `device`, `equip_id` | Compressor shortest downtime |
+| `vertiv_ac_compressor_start_demand_percent` | Gauge | % | `instance`, `device`, `equip_id` | Compressor start demand |
+| `vertiv_ac_compressor_stop_demand_percent` | Gauge | % | `instance`, `device`, `equip_id` | Compressor stops demand |
+| `vertiv_ac_compressor_min_capacity_percent` | Gauge | % | `instance`, `device`, `equip_id` | Compressor minimum capacity |
+| `vertiv_ac_compressor_standard_capacity_percent` | Gauge | % | `instance`, `device`, `equip_id` | Compressor standard capacity |
+| `vertiv_ac_compressor_max_capacity_percent` | Gauge | % | `instance`, `device`, `equip_id` | Compressor maximum capacity |
+| `vertiv_ac_compressor_start_capacity_percent` | Gauge | % | `instance`, `device`, `equip_id` | Compressor start capacity |
+| `vertiv_ac_compressor_dehumid_capacity_increase_percent` | Gauge | % | `instance`, `device`, `equip_id` | Compressor dehumidification capacity increases |
+| `vertiv_ac_compressor_max_capacity_runtime_minutes` | Gauge | min | `instance`, `device`, `equip_id` | Maximum capacity of the compressor running time |
+| `vertiv_ac_compressor_start_time_seconds` | Gauge | s | `instance`, `device`, `equip_id` | Compressor start time |
+| `vertiv_ac_compressor_output_dead_zone_percent` | Gauge | % | `instance`, `device`, `equip_id` | Compressor output dead zone |
+| `vertiv_ac_compressor_oil_return_cycle_minutes` | Gauge | min | `instance`, `device`, `equip_id` | Oil return cycle |
+| `vertiv_ac_compressor_oil_return_runtime_minutes` | Gauge | min | `instance`, `device`, `equip_id` | Oil return running time |
+| `vertiv_ac_compressor_oil_return_capacity_percent` | Gauge | % | `instance`, `device`, `equip_id` | Oil return capacity |
+| `vertiv_ac_compressor_temp_proportional_band_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Compressor temperature proportional band |
+| `vertiv_ac_compressor_temp_integration_time_seconds` | Gauge | s | `instance`, `device`, `equip_id` | Compressor temperature integration time |
+| `vertiv_ac_compressor_temp_differential_time_seconds` | Gauge | s | `instance`, `device`, `equip_id` | Compressor temperature differential time |
+| `vertiv_ac_compressor_running_hours_total` | Gauge | h | `instance`, `device`, `equip_id` | Compressor running hours |
+| `vertiv_ac_compressor_startstop_records_total` | Gauge | 次 | `instance`, `device`, `equip_id` | Number of compressor start and stop records |
+| `vertiv_ac_compressor_high_pressure_anomalies_total` | Gauge | 次 | `instance`, `device`, `equip_id` | Number of high pressure anomalies recorded |
+| `vertiv_ac_fan_speed_percent` | Gauge | % | `instance`, `device`, `equip_id` | Fan speed |
+| `vertiv_ac_fan_min_speed_percent` | Gauge | % | `instance`, `device`, `equip_id` | Fan minimum speed |
+| `vertiv_ac_fan_standard_speed_percent` | Gauge | % | `instance`, `device`, `equip_id` | Fan standard speed |
+| `vertiv_ac_fan_humidification_speed_percent` | Gauge | % | `instance`, `device`, `equip_id` | Fan humidification speed |
+| `vertiv_ac_fan_analog_output_lower_percent` | Gauge | % | `instance`, `device`, `equip_id` | Fan analog output lower limit |
+| `vertiv_ac_fan_analog_output_upper_percent` | Gauge | % | `instance`, `device`, `equip_id` | Fan analog output upper limit |
+| `vertiv_ac_fan_low_speed_step_percent_per_sec` | Gauge | %/s | `instance`, `device`, `equip_id` | Fan low speed step |
+| `vertiv_ac_fan_high_speed_step_percent_per_sec` | Gauge | %/s | `instance`, `device`, `equip_id` | Fan high speed step |
+| `vertiv_ac_fan_down_delay_seconds` | Gauge | s | `instance`, `device`, `equip_id` | Fan down delay |
+| `vertiv_ac_fan_start_delay_seconds` | Gauge | s | `instance`, `device`, `equip_id` | Fan start delay |
+| `vertiv_ac_fan_downtime_seconds` | Gauge | s | `instance`, `device`, `equip_id` | Fan downtime |
+| `vertiv_ac_fan_temp_proportional_band_celsius` | Gauge | °C | `instance`, `device`, `equip_id` | Fan temperature proportional band |
+| `vertiv_ac_fan_temp_integration_time_seconds` | Gauge | s | `instance`, `device`, `equip_id` | Fan temperature integration time |
+| `vertiv_ac_fan_running_hours_total` | Gauge | h | `instance`, `device`, `equip_id` | Fan running hours |
+| `vertiv_ac_fan_startstop_records_total` | Gauge | 次 | `instance`, `device`, `equip_id` | Number of fan start and stop records |
+| `vertiv_ac_eev_opening_degree_percent` | Gauge | % | `instance`, `device`, `equip_id` | Expansion valve opening degree |
+| `vertiv_ac_eev_time_constant_seconds` | Gauge | s | `instance`, `device`, `equip_id` | EEV time constant |
+| `vertiv_ac_eev_start_opening_percent` | Gauge | % | `instance`, `device`, `equip_id` | EEV start opening degree |
+| `vertiv_ac_eev_start_time_seconds` | Gauge | s | `instance`, `device`, `equip_id` | EEV start time |
+| `vertiv_ac_pump_running_hours_total` | Gauge | h | `instance`, `device`, `equip_id` | Pump running hours |
+| `vertiv_ac_pump_startstop_records_total` | Gauge | 次 | `instance`, `device`, `equip_id` | Number of pump start and stop records |
+| `vertiv_ac_humidifier_running_hours_total` | Gauge | h | `instance`, `device`, `equip_id` | Humidifier running hours |
+| `vertiv_ac_humidifier_startstop_records_total` | Gauge | 次 | `instance`, `device`, `equip_id` | Number of humidifier start and stop records |
+| `vertiv_ac_electric_heating_running_hours_total` | Gauge | h | `instance`, `device`, `equip_id` | Electric heating operation hours |
+| `vertiv_ac_electric_heating_startstop_records_total` | Gauge | 次 | `instance`, `device`, `equip_id` | Number of electric heating start and stop records |
+| `vertiv_ac_dehumidification_runtime_minutes` | Gauge | min | `instance`, `device`, `equip_id` | Dehumidification run time |
+| `vertiv_ac_filter_maintenance_interval_days` | Gauge | d | `instance`, `device`, `equip_id` | Filter maintenance reminder time |
+| `vertiv_ac_status_operation` | Gauge | — | `instance`, `device`, `equip_id` | Air conditioning operation status |
+| `vertiv_ac_status_refrigeration` | Gauge | — | `instance`, `device`, `equip_id` | Refrigeration flag |
+| `vertiv_ac_status_heating` | Gauge | — | `instance`, `device`, `equip_id` | Heating flag |
+| `vertiv_ac_status_humidification` | Gauge | — | `instance`, `device`, `equip_id` | Humidification mark |
+| `vertiv_ac_status_dehumidification` | Gauge | — | `instance`, `device`, `equip_id` | Dehumidification mark |
+| `vertiv_ac_status_compressor_output` | Gauge | — | `instance`, `device`, `equip_id` | Compressor output |
+| `vertiv_ac_status_fan_output` | Gauge | — | `instance`, `device`, `equip_id` | Fan output |
+| `vertiv_ac_status_electric_heating_output` | Gauge | — | `instance`, `device`, `equip_id` | Electric heating output |
+| `vertiv_ac_status_humidifier_output` | Gauge | — | `instance`, `device`, `equip_id` | Humidifier output |
+| `vertiv_ac_status_condensate_pump_output` | Gauge | — | `instance`, `device`, `equip_id` | Condensate pump output |
+| `vertiv_ac_status_liquid_solenoid_valve_output` | Gauge | — | `instance`, `device`, `equip_id` | Liquid circuit solenoid valve output |
+| `vertiv_ac_status_public_alarm_output` | Gauge | — | `instance`, `device`, `equip_id` | Public alarm output |
+| `vertiv_ac_status_high_pressure_alarm` | Gauge | — | `instance`, `device`, `equip_id` | High pressure alarm |
+| `vertiv_ac_status_water_level_switch` | Gauge | — | `instance`, `device`, `equip_id` | Water level switch |
+| `vertiv_ac_status_remote_switch` | Gauge | — | `instance`, `device`, `equip_id` | Remote switch |
+| `vertiv_ac_status_fan_1` | Gauge | — | `instance`, `device`, `equip_id` | Fan 1 state |
+| `vertiv_ac_status_fan_2` | Gauge | — | `instance`, `device`, `equip_id` | Fan 2 state |
+| `vertiv_ac_status_fan_3` | Gauge | — | `instance`, `device`, `equip_id` | Fan 3 state |
+| `vertiv_ac_status_fan_4` | Gauge | — | `instance`, `device`, `equip_id` | Fan 4 state |
+| `vertiv_ac_status_new_alarm_flag` | Gauge | — | `instance`, `device`, `equip_id` | New alarm flag |
+| `vertiv_ac_status_filter_maintenance` | Gauge | — | `instance`, `device`, `equip_id` | Filter maintenance |
+| `vertiv_ac_status_communication` | Gauge | — | `instance`, `device`, `equip_id` | Communication Status |
+| `vertiv_ac_status_dehumidification_enabled` | Gauge | — | `instance`, `device`, `equip_id` | Dehumidification function enabled |
+| `vertiv_ac_status_humidification_enabled` | Gauge | — | `instance`, `device`, `equip_id` | Humidification function enabled |
+| `vertiv_ac_status_heating_function` | Gauge | — | `instance`, `device`, `equip_id` | Heating function |
+| `vertiv_ac_status_condensate_pump` | Gauge | — | `instance`, `device`, `equip_id` | Condensate pump |
+| `vertiv_ac_status_monitor_shutdown_enable` | Gauge | — | `instance`, `device`, `equip_id` | Monitor shutdown enable |
+| `vertiv_ac_status_soft_shutdown` | Gauge | — | `instance`, `device`, `equip_id` | Soft shutdown status |
+| `vertiv_ac_alarm_attr_high_voltage` | Gauge | — | `instance`, `device`, `equip_id` | High voltage alarm attribute |
+| `vertiv_ac_alarm_attr_low_voltage` | Gauge | — | `instance`, `device`, `equip_id` | Low voltage alarm attribute |
+| `vertiv_ac_alarm_attr_exhaust_high_temp` | Gauge | — | `instance`, `device`, `equip_id` | Exhaust high temperature alarm attribute |
+| `vertiv_ac_alarm_attr_exhaust_superheat_low` | Gauge | — | `instance`, `device`, `equip_id` | Exhaust superheat low alarm attribute |
+| `vertiv_ac_alarm_attr_return_air_temp` | Gauge | — | `instance`, `device`, `equip_id` | Return air temperature alarm attribute |
+| `vertiv_ac_alarm_attr_airflow_temp` | Gauge | — | `instance`, `device`, `equip_id` | Air temperature alarm attribute |
+| `vertiv_ac_alarm_attr_return_air_humidity` | Gauge | — | `instance`, `device`, `equip_id` | Return air humidity alarm attribute |
+| `vertiv_ac_alarm_attr_return_air_low_humidity` | Gauge | — | `instance`, `device`, `equip_id` | Return air low humidity alarm attribute |
+| `vertiv_ac_alarm_attr_high_voltage_lock` | Gauge | — | `instance`, `device`, `equip_id` | High voltage lock alarm attribute |
+| `vertiv_ac_alarm_attr_low_voltage_lock` | Gauge | — | `instance`, `device`, `equip_id` | Low-voltage lock alarm attribute |
+| `vertiv_ac_alarm_attr_power_loss` | Gauge | — | `instance`, `device`, `equip_id` | Power loss alarm attribute |
+| `vertiv_ac_alarm_attr_power_overvoltage` | Gauge | — | `instance`, `device`, `equip_id` | Power overvoltage alarm attribute |
+| `vertiv_ac_alarm_attr_power_undervoltage` | Gauge | — | `instance`, `device`, `equip_id` | Power undervoltage alarm attribute |
+| `vertiv_ac_alarm_attr_floor_overflow` | Gauge | — | `instance`, `device`, `equip_id` | Floor overflow alarm attribute |
+| `vertiv_ac_alarm_attr_high_water` | Gauge | — | `instance`, `device`, `equip_id` | High water alarm attribute |
+| `vertiv_ac_alarm_attr_filter_plugging` | Gauge | — | `instance`, `device`, `equip_id` | Filter plugging alarm attribute |
+| `vertiv_ac_alarm_attr_airflow_loss` | Gauge | — | `instance`, `device`, `equip_id` | Airflow loss alarm attribute |
+| `vertiv_ac_alarm_attr_remote_shutdown` | Gauge | — | `instance`, `device`, `equip_id` | Remote shutdown alarm attribute |
+| `vertiv_ac_alarm_attr_return_air_temp_sensor_fault` | Gauge | — | `instance`, `device`, `equip_id` | Return air temperature sensor fault alarm attribute |
+| `vertiv_ac_alarm_attr_return_air_humidity_sensor_fault` | Gauge | — | `instance`, `device`, `equip_id` | Return air humidity sensor fault alarm attribute |
+| `vertiv_ac_alarm_attr_exhaust_temp_sensor_fault` | Gauge | — | `instance`, `device`, `equip_id` | Exhaust temperature sensor fault alarm attribute |
+| `vertiv_ac_alarm_attr_fan_failure` | Gauge | — | `instance`, `device`, `equip_id` | Fan failure alarm attribute |
+| `vertiv_ac_alarm_attr_eev_comm_fault` | Gauge | — | `instance`, `device`, `equip_id` | EEV communication fault alarm attribute |
+| `vertiv_ac_alarm_attr_insufficient_refrigerant` | Gauge | — | `instance`, `device`, `equip_id` | Insufficient refrigerant alarm attribute |
+| `vertiv_ac_alarm_attr_inspiratory_temp_sensor_fault` | Gauge | — | `instance`, `device`, `equip_id` | Inhalation temperature sensor fault alarm attribute |
+| `vertiv_ac_alarm_attr_compressor_drive_comm_fault` | Gauge | — | `instance`, `device`, `equip_id` | Compressor Drive Communication Fault Alarm Attribute |
+| `vertiv_ac_alarm_attr_compressor_drive_failure` | Gauge | — | `instance`, `device`, `equip_id` | Compressor drive failure failure alarm |
+| `vertiv_ac_alarm_attr_compressor_radiator_over_temp` | Gauge | — | `instance`, `device`, `equip_id` | Compressor radiator over temperature alarm |
+| `vertiv_ac_alarm_attr_compressor_overcurrent` | Gauge | — | `instance`, `device`, `equip_id` | Compressor overcurrent alarm |
+| `vertiv_ac_alarm_attr_compressor_phase_failure` | Gauge | — | `instance`, `device`, `equip_id` | Compressor phase failure protection alarm |
+| `vertiv_ac_alarm_attr_busbar_voltage_exception` | Gauge | — | `instance`, `device`, `equip_id` | Busbar voltage exception alarm |
+| `vertiv_ac_alarm_attr_humidifier_fault` | Gauge | — | `instance`, `device`, `equip_id` | Humidifier fault alarm attribute |
+| `vertiv_ac_system_alarm_active_count` | Gauge | 个 | `instance`, `device`, `equip_id` | Number of alarm states |
+| `vertiv_ac_system_alarm_history_count` | Gauge | 个 | `instance`, `device`, `equip_id` | Number of alarm history |
+| `vertiv_ac_system_software_version_high` | Gauge | — | `instance`, `device`, `equip_id` | Software version is high |
+| `vertiv_ac_system_software_version_low` | Gauge | — | `instance`, `device`, `equip_id` | The software version is low |
+| `vertiv_ac_system_monitor_baud_rate` | Gauge | baud | `instance`, `device`, `equip_id` | Monitor baud rate |
+| `vertiv_ac_system_monitor_address` | Gauge | — | `instance`, `device`, `equip_id` | Monitor the address |
+| `vertiv_ac_system_unit_count` | Gauge | 个 | `instance`, `device`, `equip_id` | Number of units |
+| `vertiv_ac_system_main_delay_minutes` | Gauge | min | `instance`, `device`, `equip_id` | Main delay |
+| `vertiv_ac_system_low_pressure_alarm_delay_seconds` | Gauge | s | `instance`, `device`, `equip_id` | Low pressure alarm delay |
+| `vertiv_ac_system_short_cycle_alarm_times_per_hour` | Gauge | 次/小时 | `instance`, `device`, `equip_id` | Short cycle alarm value |
+| `vertiv_ac_system_exhaust_superheat_low_alarm_delay_sec` | Gauge | s | `instance`, `device`, `equip_id` | Exhaust superheat low alarm delay |
+| `vertiv_ac_signal_value` | Gauge | 动态（设备返回，当前未导出单位） | `instance`, `device`, `equip_id`, `signal_name`, `occurrence` | 设备返回的原始 AC 信号值；`signal_name` 和 `occurrence` 为动态 Label，单位未被导出。 |
+
 ## Run
 
 Use the example config as a starting point:
@@ -221,11 +476,40 @@ The image expects the config file at `/app/config.yaml`. The local example runs 
 
 The build context is restricted by `.dockerignore` to the build definition, `go.mod`, `go.sum`, and production Go source files. Local credentials, Git history, dashboards, documentation, tests, caches, and build artifacts are not sent to the Docker builder.
 
+## GitHub Automation and Container Images
+
+The GitHub Actions CI runs Go formatting, module verification, `go vet`, race-enabled tests, and a versioned binary build for pull requests, pushes to `main`, and `v*` tags. It then builds and smoke-tests the container on both `linux/amd64` and `linux/arm64`.
+
+After all checks pass, pushes to `main` and `v*` tags publish a multi-platform image to:
+
+```text
+ghcr.io/marismecom/vertiv_exporter
+```
+
+The workflow uses the repository-provided `GITHUB_TOKEN`; no custom registry secret is required. A `main` push publishes `main` and `sha-*` tags. A stable tag such as `v1.2.3` publishes `v1.2.3`, `1.2.3`, `1.2`, `1`, `latest`, and `sha-*`; prerelease tags do not move `latest`.
+
+Create a release image by pushing a semantic version tag:
+
+```bash
+git tag v1.2.3
+git push origin v1.2.3
+```
+
+Pull the latest stable image with:
+
+```bash
+docker pull ghcr.io/marismecom/vertiv_exporter:latest
+```
+
+The first published package may be private depending on the repository or organization defaults. Change its visibility in the package settings when public anonymous pulls are required.
+
+In addition, `govulncheck` runs for relevant pull requests and pushes, once a week, and on demand. Dependabot checks Go modules, GitHub Actions, and the Docker base images monthly.
+
 ## Grafana Dashboard
 
-`vertiv_grafana_dashboard.json` uses the Grafana dashboard v2 resource schema. Its Prometheus queries reference a `datasource` variable instead of an environment-specific data source UID, and its instance/device selections start empty. Select the target Prometheus data source after importing the dashboard.
+推荐导入 [`grafana/vertiv_grafana_dashboard.json`](grafana/vertiv_grafana_dashboard.json)。该 dashboard 的 UID 为 `vertiv-exporter-overview`，所有查询使用 `${DS_PROMETHEUS}` 数据源变量，并提供 `job`、`instance`、`device` 筛选。详细导入步骤和面板指标清单见 [`grafana/README.md`](grafana/README.md)。
 
-The checked-in resource intentionally omits server-managed UID, resource version, namespace, user, and folder metadata. Add the target namespace or folder annotation in the deployment environment when required.
+项目根目录的 `vertiv_grafana_dashboard.json` 是原有的 Grafana dashboard v2 resource，继续保留以兼容已有的声明式部署；新部署建议使用 `grafana/` 下的标准导入版本。
 
 ## Supported Metric Groups
 
@@ -242,6 +526,14 @@ Every device metric includes `instance`, `device`, and `equip_id`. THD and UPS m
 - Pressure
 - Electrical values
 - Compressor, fan, EEV, runtime, alarm attributes, system status
+- `vertiv_ac_signal_value{signal_name,occurrence}` exposes every named AC signal
+  reported by the device, including signals without a built-in field mapping.
+  Existing semantic AC metrics remain available for dashboard compatibility.
+
+The raw AC metric uses only the signal name and parsed numeric value from the
+device response. Source indexes and sampling timestamps are not exported.
+`occurrence` is normally `1` and increases only when one device reports the
+same signal name more than once.
 
 ### THD
 
