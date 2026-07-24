@@ -34,7 +34,6 @@ Dockerfile                  Multi-stage, non-root container image
 .github/                    CI, GHCR publishing, dependency updates, and templates
 config.example.yaml         Example exporter configuration
 grafana/                    Standard Grafana dashboard and import guide
-vertiv_grafana_dashboard.json  Legacy Grafana dashboard v2 resource
 cmd/vertiv_exporter/        CLI entrypoint and HTTP server
 internal/client/            Login, keepalive, CGI fetching, response parsing
 internal/collector/         Collector, built-in AC metadata, and THD/UPS mappings
@@ -508,8 +507,6 @@ In addition, `govulncheck` runs for relevant pull requests and pushes, once a we
 ## Grafana Dashboard
 
 推荐导入 [`grafana/vertiv_grafana_dashboard.json`](grafana/vertiv_grafana_dashboard.json)。该 dashboard 的 UID 为 `vertiv-exporter-overview`，所有查询使用 `${DS_PROMETHEUS}` 数据源变量，并提供 `job`、`instance`、`device` 筛选。详细导入步骤和面板指标清单见 [`grafana/README.md`](grafana/README.md)。
-
-项目根目录的 `vertiv_grafana_dashboard.json` 是原有的 Grafana dashboard v2 resource，继续保留以兼容已有的声明式部署；新部署建议使用 `grafana/` 下的标准导入版本。
 
 ## Supported Metric Groups
 
