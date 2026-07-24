@@ -11,7 +11,7 @@
 
 Dashboard 不包含硬编码的数据源 UID。所有面板均使用 `${DS_PROMETHEUS}`，PromQL 同时带有 `job` / `instance` 过滤条件。
 
-> `instance` 是 Prometheus 的抓取目标标签。Exporter 自身也导出了同名标签；在 Prometheus 默认 `honor_labels: false` 配置下，Exporter 原始标签会被重命名为 `exported_instance`。需要按 Vertiv 目标名称筛选时，请参考项目根目录 `REVIEW.md` 中的标签迁移建议。
+> `instance` 是 Prometheus 的抓取目标标签。Exporter 自身也导出了同名标签；在 Prometheus 默认 `honor_labels: false` 配置下，Exporter 原始标签会被重命名为 `exported_instance`。需要按 Vertiv 目标名称筛选时，请根据实际 Prometheus 配置选择对应标签。
 
 ## 面板与指标
 
