@@ -7,9 +7,9 @@ exporter:
 
 targets:
   - name: "dc-rack-01"
-    host: "https://192.168.1.100"
-    username: "admin"
-    password: "plain_password"
+    host: "https://vertiv.example.invalid"
+    username: "CHANGE_ME_USERNAME"
+    password: "CHANGE_ME_PASSWORD"
     tls_skip_verify: true
     devices:
       - name: "AC1"

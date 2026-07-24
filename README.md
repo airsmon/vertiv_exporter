@@ -34,6 +34,7 @@ Dockerfile                  Multi-stage, non-root container image
 .github/                    CI, GHCR publishing, dependency updates, and templates
 config.example.yaml         Example exporter configuration
 grafana/                    Standard Grafana dashboard and import guide
+kubernetes/                 Sanitized Kubernetes deployment example
 packaging/systemd/          Hardened systemd service unit
 cmd/vertiv_exporter/        CLI entrypoint and HTTP server
 internal/client/            Login, keepalive, CGI fetching, response parsing
@@ -55,9 +56,9 @@ exporter:
 
 targets:
   - name: "dc-rack-01"
-    host: "https://vertiv.example.local"
-    username: "admin"
-    password: "plain_password"
+    host: "https://vertiv.example.invalid"
+    username: "CHANGE_ME_USERNAME"
+    password: "CHANGE_ME_PASSWORD"
     tls_skip_verify: true
     devices:
       - name: "AC_1"
@@ -512,6 +513,38 @@ sudo install -o root -g root -m 0755 \
 /usr/local/bin/vertiv_exporter --version
 sudo systemctl start vertiv_exporter
 sudo systemctl status --no-pager vertiv_exporter
+```
+
+## Kubernetes
+
+[`kubernetes/deployment.yaml`](kubernetes/deployment.yaml) contains a sanitized example using only built-in Kubernetes resource types. It creates the `monitoring` namespace, a non-sensitive ConfigMap, a restricted ServiceAccount, the Deployment, and a ClusterIP Service. The manifest deliberately does not contain a Secret object, credential values, or a real Vertiv address.
+
+Before applying it, replace the example host and device IDs in the ConfigMap, then create the credentials directly in the cluster:
+
+```bash
+kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl -n monitoring create secret generic vertiv-exporter-credentials \
+  --from-literal=username='<VERTIV_USERNAME>' \
+  --from-literal=password='<VERTIV_PASSWORD>'
+```
+
+Do not commit real credentials to the manifest. For production environments, prefer the cluster's existing secret-management solution instead of entering credentials on a command line.
+
+Deploy and verify the exporter:
+
+```bash
+kubectl apply -f kubernetes/deployment.yaml
+kubectl -n monitoring rollout status deployment/vertiv-exporter
+kubectl -n monitoring port-forward service/vertiv-exporter 9101:9101
+```
+
+The metrics endpoint is then available at `http://127.0.0.1:9101/metrics`. The probes use `/` so they do not initiate Vertiv device scrapes. Prometheus instances using annotation discovery can use the included pod annotations; the Service is also available as `vertiv-exporter.monitoring.svc:9101`.
+
+The process reads its configuration and Secret-backed environment variables only at startup. Restart the Deployment after changing either resource:
+
+```bash
+kubectl -n monitoring rollout restart deployment/vertiv-exporter
 ```
 
 ## Prometheus Configuration
