@@ -2,7 +2,7 @@
 # Stage 1: 依赖缓存层（仅 go.mod / go.sum）
 # 只要依赖不变，此层永久命中缓存
 # ─────────────────────────────────────────────
-FROM --platform=$BUILDPLATFORM golang:1.23-alpine AS deps
+FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS deps
 
 WORKDIR /src
 
