@@ -58,6 +58,54 @@ targets:
 	}
 }
 
+func TestLoadOverridesCredentialsFromEnvironment(t *testing.T) {
+	t.Setenv("VERTIV_USERNAME", "secret-user")
+	t.Setenv("VERTIV_PASSWORD", "secret-password")
+
+	cfg := loadTestConfig(t, `
+targets:
+  - name: rack-01
+    host: https://one.example
+    username: yaml-user
+    password: yaml-password
+    devices:
+      - name: AC1
+        equip_id: 23
+  - name: rack-02
+    host: https://two.example
+    devices:
+      - name: AC2
+        equip_id: 24
+`)
+
+	for _, target := range cfg.Targets {
+		if target.Username != "secret-user" || target.Password != "secret-password" {
+			t.Fatalf("target %q credentials were not overridden", target.Name)
+		}
+	}
+}
+
+func TestLoadRejectsIncompleteCredentialEnvironment(t *testing.T) {
+	t.Setenv("VERTIV_USERNAME", "secret-user")
+	t.Setenv("VERTIV_PASSWORD", "")
+
+	path := writeTestConfig(t, `
+targets:
+  - name: rack-01
+    host: https://vertiv.example
+    username: yaml-user
+    password: yaml-password
+    devices:
+      - name: AC1
+        equip_id: 23
+`)
+
+	_, err := Load(path)
+	if err == nil || !strings.Contains(err.Error(), "must both be set") {
+		t.Fatalf("Load() error = %v, want incomplete credential environment error", err)
+	}
+}
+
 func TestLoadRejectsInvalidConfiguration(t *testing.T) {
 	tests := []struct {
 		name    string

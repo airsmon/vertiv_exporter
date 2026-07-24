@@ -81,6 +81,7 @@ targets:
 - `target.name`: value used as the Prometheus `instance` label
 - `host`: Vertiv web base URL
 - `username` / `password`: plain-text login values; the exporter encodes them automatically before calling `login.cgi`
+- `VERTIV_USERNAME` / `VERTIV_PASSWORD`: optional environment variables that override the YAML credentials for every target; they must be set together to non-empty values and are intended for Docker or Kubernetes Secret injection
 - `tls_skip_verify`: useful for self-signed Vertiv HTTPS endpoints
 - `device.type`: device-family hint; use `ac`, `thd`, or `ups`
 - `device.equip_id`: CGI request `_equipId` value used for that device
@@ -99,7 +100,9 @@ The IDs above are examples from one tested installation. Confirm the CGI request
 
 ### Credential Safety
 
-- The YAML file contains plain-text credentials. Keep `config.yaml` out of version control. For direct execution, restrict it with `chmod 600 config.yaml`; for systemd, use the `root:vertiv_exporter` ownership and `0640` mode documented below.
+- The YAML file may contain plain-text credentials. Keep `config.yaml` out of version control. For direct execution, restrict it with `chmod 600 config.yaml`; for systemd, use the `root:vertiv_exporter` ownership and `0640` mode documented below.
+- For Kubernetes, omit `username` and `password` from the ConfigMap and inject non-empty `VERTIV_USERNAME` and `VERTIV_PASSWORD` values from a Secret.
+- The environment-variable override applies one credential pair to every target. When targets require different credentials, mount the complete `config.yaml` from a Secret instead.
 - Mount credentials through a Docker/Kubernetes secret rather than baking them into an image.
 - Enable `tls_skip_verify` only for trusted internal endpoints whose certificate cannot be validated normally.
 - Keep `debug_response` disabled during normal operation because parse errors may include complete device responses.

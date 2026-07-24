@@ -49,6 +49,10 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("parse config %q: %w", path, err)
 	}
 
+	if err := applyCredentialEnv(&cfg); err != nil {
+		return nil, err
+	}
+
 	if cfg.Exporter.ListenAddress == "" {
 		cfg.Exporter.ListenAddress = ":9101"
 	}
@@ -96,4 +100,23 @@ func Load(path string) (*Config, error) {
 	}
 
 	return &cfg, nil
+}
+
+func applyCredentialEnv(cfg *Config) error {
+	username, usernameSet := os.LookupEnv("VERTIV_USERNAME")
+	password, passwordSet := os.LookupEnv("VERTIV_PASSWORD")
+
+	if !usernameSet && !passwordSet {
+		return nil
+	}
+	if !usernameSet || !passwordSet || username == "" || password == "" {
+		return fmt.Errorf("VERTIV_USERNAME and VERTIV_PASSWORD must both be set to non-empty values")
+	}
+
+	for i := range cfg.Targets {
+		cfg.Targets[i].Username = username
+		cfg.Targets[i].Password = password
+	}
+
+	return nil
 }
