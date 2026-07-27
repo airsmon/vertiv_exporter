@@ -1,0 +1,224 @@
+# replicaCount is the number of exporter pods. Keep this at one unless the
+# target devices can tolerate multiple independent login sessions.
+replicaCount: 1
+
+image:
+  # image.repository is the Vertiv exporter container repository.
+  repository: ghcr.io/airsmon/vertiv_exporter
+  # image.pullPolicy controls when Kubernetes pulls the image.
+  pullPolicy: IfNotPresent
+  # image.tag defaults to the chart appVersion when empty.
+  tag: ""
+  # image.digest, when set, takes precedence over image.tag.
+  digest: ""
+
+# imagePullSecrets lists existing registry credential Secrets.
+imagePullSecrets: []
+# nameOverride partially overrides the chart name.
+nameOverride: ""
+# fullnameOverride fully overrides generated resource names.
+fullnameOverride: ""
+# commonLabels are added to every resource.
+commonLabels: {}
+# commonAnnotations are added to every resource.
+commonAnnotations: {}
+
+serviceAccount:
+  # serviceAccount.create controls ServiceAccount creation.
+  create: true
+  # serviceAccount.name uses the generated full name when empty.
+  name: ""
+  # serviceAccount.annotations are added to the ServiceAccount.
+  annotations: {}
+  # serviceAccount.automountServiceAccountToken keeps Kubernetes API credentials
+  # out of the exporter pod.
+  automountServiceAccountToken: false
+
+# deploymentAnnotations are added to the Deployment.
+deploymentAnnotations: {}
+# podLabels are added to exporter pods.
+podLabels: {}
+# podAnnotations are added to exporter pods.
+podAnnotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# revisionHistoryLimit controls retained Deployment revisions.
+revisionHistoryLimit: 3
+strategy:
+  # strategy.type defaults to Recreate to avoid duplicate device sessions.
+  type: Recreate
+# terminationGracePeriodSeconds gives in-flight scrapes time to stop.
+terminationGracePeriodSeconds: 15
+
+exporter:
+  # exporter.port is used by the process, container, and Service target port.
+  port: 9101
+  # exporter.metricsPath is used by the process and ServiceMonitor.
+  metricsPath: /metrics
+  # exporter.scrapeTimeout limits one complete collection run.
+  scrapeTimeout: 10s
+  # exporter.metricsFile optionally points to a mounted AC metrics definition.
+  metricsFile: ""
+  # exporter.debugResponse may expose device responses in logs and should
+  # normally remain disabled.
+  debugResponse: false
+
+config:
+  existingSecret:
+    # config.existingSecret.name mounts a complete config.yaml from a Secret
+    # instead of creating a ConfigMap. Use this for per-target credentials.
+    name: ""
+    # config.existingSecret.key is the Secret data key containing config.yaml.
+    key: config.yaml
+  # config.targets contains non-sensitive target and device definitions.
+  # Credentials are intentionally unsupported here; use credentials.existingSecret.
+  targets: []
+  # - name: dc-rack-01
+  #   host: https://vertiv.example.invalid
+  #   tlsSkipVerify: false
+  #   devices:
+  #     - name: AC_1
+  #       type: ac
+  #       equipId: 23
+
+credentials:
+  existingSecret:
+    # credentials.existingSecret.name provides one credential pair shared by
+    # every target through VERTIV_USERNAME and VERTIV_PASSWORD.
+    name: ""
+    # credentials.existingSecret.usernameKey is the username data key.
+    usernameKey: username
+    # credentials.existingSecret.passwordKey is the password data key.
+    passwordKey: password
+
+service:
+  # service.type is the Kubernetes Service type.
+  type: ClusterIP
+  # service.port is the Service-facing metrics port.
+  port: 9101
+  # service.annotations are added to the Service.
+  annotations: {}
+  # service.labels are added to the Service.
+  labels: {}
+
+startupProbe:
+  enabled: true
+  periodSeconds: 5
+  timeoutSeconds: 2
+  failureThreshold: 60
+  successThreshold: 1
+
+readinessProbe:
+  enabled: true
+  periodSeconds: 10
+  timeoutSeconds: 2
+  failureThreshold: 3
+  successThreshold: 1
+
+livenessProbe:
+  enabled: true
+  periodSeconds: 30
+  timeoutSeconds: 2
+  failureThreshold: 3
+  successThreshold: 1
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+serviceMonitor:
+  # serviceMonitor.enabled creates a Prometheus Operator ServiceMonitor.
+  enabled: false
+  # serviceMonitor.namespace defaults to the release namespace.
+  namespace: ""
+  # serviceMonitor.labels are commonly used by Prometheus selectors.
+  labels: {}
+  # serviceMonitor.annotations are added to the ServiceMonitor.
+  annotations: {}
+  interval: 30s
+  scrapeTimeout: 15s
+  honorLabels: false
+  relabelings: []
+  metricRelabelings: []
+  sampleLimit: 0
+
+prometheusRule:
+  # prometheusRule.enabled creates built-in Prometheus alerting rules.
+  enabled: false
+  # prometheusRule.namespace defaults to the release namespace.
+  namespace: ""
+  # prometheusRule.labels are commonly used by Prometheus selectors.
+  labels: {}
+  # prometheusRule.annotations are added to the PrometheusRule.
+  annotations: {}
+  # prometheusRule.ruleLabels are added to every built-in alert.
+  ruleLabels: {}
+  rules:
+    exporterTargetDown:
+      enabled: true
+      for: 5m
+      severity: critical
+    thdCommunicationFault:
+      enabled: true
+      for: 5m
+      severity: critical
+    thdHighTemperature:
+      enabled: true
+      for: 2m
+      severity: critical
+    thdDoorOpen:
+      enabled: true
+      for: 5m
+      severity: warning
+    upsUtilityPowerLost:
+      enabled: true
+      for: 1m
+      severity: critical
+    upsHighLoad:
+      enabled: true
+      threshold: 90
+      for: 10m
+      severity: warning
+    upsLowBatteryCapacity:
+      enabled: true
+      threshold: 20
+      for: 5m
+      severity: critical
+    acActiveAlarm:
+      enabled: true
+      for: 5m
+      severity: warning
+  # prometheusRule.additionalGroups appends complete Prometheus rule groups.
+  additionalGroups: []
+
+# priorityClassName assigns a PriorityClass to exporter pods.
+priorityClassName: ""
+# nodeSelector constrains exporter pods to selected nodes.
+nodeSelector: {}
+# tolerations configure pod tolerations.
+tolerations: []
+# affinity configures pod affinity and anti-affinity.
+affinity: {}
+# extraEnv adds environment variables after Secret-backed credentials.
+extraEnv: []
+# extraVolumes adds pod volumes.
+extraVolumes: []
+# extraVolumeMounts adds exporter container mounts.
+extraVolumeMounts: []

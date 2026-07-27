@@ -1,0 +1,39 @@
+{{- if not .Values.config.existingSecret.name }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "vertiv-exporter.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "vertiv-exporter.labels" . | nindent 4 }}
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+  config.yaml: |
+    exporter:
+      listen_address: {{ printf ":%d" (int .Values.exporter.port) | quote }}
+      metrics_path: {{ .Values.exporter.metricsPath | quote }}
+      scrape_timeout: {{ .Values.exporter.scrapeTimeout | quote }}
+      metrics_file: {{ .Values.exporter.metricsFile | quote }}
+      debug_response: {{ .Values.exporter.debugResponse }}
+    {{- if .Values.config.targets }}
+
+    targets:
+      {{- range .Values.config.targets }}
+      - name: {{ .name | quote }}
+        host: {{ .host | quote }}
+        tls_skip_verify: {{ default false .tlsSkipVerify }}
+        devices:
+          {{- range .devices }}
+          - name: {{ .name | quote }}
+            type: {{ .type | quote }}
+            equip_id: {{ .equipId }}
+          {{- end }}
+      {{- end }}
+    {{- else }}
+
+    targets: []
+    {{- end }}
+{{- end }}

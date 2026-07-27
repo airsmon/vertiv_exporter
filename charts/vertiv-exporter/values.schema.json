@@ -1,0 +1,285 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "replicaCount": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "image": {
+      "type": "object",
+      "required": ["repository", "pullPolicy", "tag", "digest"],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "IfNotPresent", "Never"]
+        },
+        "tag": {
+          "type": "string"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^$|^sha256:[a-fA-F0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "exporter": {
+      "type": "object",
+      "required": ["port", "metricsPath", "scrapeTimeout", "metricsFile", "debugResponse"],
+      "properties": {
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "metricsPath": {
+          "type": "string",
+          "pattern": "^/[^?#{}[:space:]]+$"
+        },
+        "scrapeTimeout": {
+          "$ref": "#/definitions/duration"
+        },
+        "metricsFile": {
+          "type": "string"
+        },
+        "debugResponse": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "config": {
+      "type": "object",
+      "required": ["existingSecret", "targets"],
+      "properties": {
+        "existingSecret": {
+          "$ref": "#/definitions/configSecret"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/target"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "credentials": {
+      "type": "object",
+      "required": ["existingSecret"],
+      "properties": {
+        "existingSecret": {
+          "$ref": "#/definitions/credentialsSecret"
+        }
+      },
+      "additionalProperties": false
+    },
+    "service": {
+      "type": "object",
+      "required": ["type", "port"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["ClusterIP", "NodePort", "LoadBalancer"]
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        }
+      },
+      "additionalProperties": true
+    },
+    "serviceMonitor": {
+      "type": "object",
+      "required": ["enabled", "interval", "scrapeTimeout"],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "interval": {
+          "$ref": "#/definitions/duration"
+        },
+        "scrapeTimeout": {
+          "$ref": "#/definitions/duration"
+        },
+        "sampleLimit": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": true
+    },
+    "prometheusRule": {
+      "type": "object",
+      "required": ["enabled", "rules", "additionalGroups"],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "rules": {
+          "type": "object",
+          "properties": {
+            "exporterTargetDown": {
+              "$ref": "#/definitions/rule"
+            },
+            "thdCommunicationFault": {
+              "$ref": "#/definitions/rule"
+            },
+            "thdHighTemperature": {
+              "$ref": "#/definitions/rule"
+            },
+            "thdDoorOpen": {
+              "$ref": "#/definitions/rule"
+            },
+            "upsUtilityPowerLost": {
+              "$ref": "#/definitions/rule"
+            },
+            "upsHighLoad": {
+              "$ref": "#/definitions/thresholdRule"
+            },
+            "upsLowBatteryCapacity": {
+              "$ref": "#/definitions/thresholdRule"
+            },
+            "acActiveAlarm": {
+              "$ref": "#/definitions/rule"
+            }
+          },
+          "additionalProperties": false
+        },
+        "additionalGroups": {
+          "type": "array"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "definitions": {
+    "duration": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*(ms|s|m|h)$"
+    },
+    "configSecret": {
+      "type": "object",
+      "required": ["name", "key"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "credentialsSecret": {
+      "type": "object",
+      "required": ["name", "usernameKey", "passwordKey"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "usernameKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "passwordKey": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "required": ["name", "host", "devices"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "host": {
+          "type": "string",
+          "pattern": "^https?://"
+        },
+        "tlsSkipVerify": {
+          "type": "boolean"
+        },
+        "devices": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/device"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "device": {
+      "type": "object",
+      "required": ["name", "type", "equipId"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "enum": ["ac", "thd", "ups"]
+        },
+        "equipId": {
+          "type": "integer",
+          "not": {
+            "const": 0
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "rule": {
+      "type": "object",
+      "required": ["enabled", "for", "severity"],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "for": {
+          "$ref": "#/definitions/duration"
+        },
+        "severity": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "thresholdRule": {
+      "type": "object",
+      "required": ["enabled", "threshold", "for", "severity"],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "for": {
+          "$ref": "#/definitions/duration"
+        },
+        "severity": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

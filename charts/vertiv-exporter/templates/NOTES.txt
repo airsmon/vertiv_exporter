@@ -1,0 +1,18 @@
+Vertiv exporter has been installed.
+
+Service:
+  {{ include "vertiv-exporter.fullname" . }}.{{ .Release.Namespace }}.svc:{{ .Values.service.port }}
+Metrics:
+  {{ .Values.exporter.metricsPath }}
+
+{{- if and (not .Values.config.existingSecret.name) (eq (len .Values.config.targets) 0) }}
+
+WARNING: config.targets is empty. Supply at least one target before starting the
+exporter, or set config.existingSecret.name to a Secret containing config.yaml.
+{{- end }}
+{{- if and (not .Values.config.existingSecret.name) (not .Values.credentials.existingSecret.name) }}
+
+WARNING: no shared credential Secret is configured. Set
+credentials.existingSecret.name, unless the complete configuration is mounted
+from config.existingSecret.
+{{- end }}
