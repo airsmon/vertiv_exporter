@@ -33,9 +33,9 @@ Current supported device families:
 Dockerfile                  Multi-stage, non-root container image
 .dockerignore               Minimal production build context allowlist
 .github/                    CI, GHCR publishing, dependency updates, and templates
-config.example.yaml         Example exporter configuration
+charts/                     Helm chart with optional Prometheus Operator resources
+.config.yaml                Example exporter configuration
 grafana/                    Standard Grafana dashboard and import guide
-kubernetes/                 Sanitized Kubernetes deployment example
 packaging/systemd/          Hardened systemd service unit
 cmd/vertiv_exporter/        CLI entrypoint and HTTP server
 internal/client/            Login, keepalive, CGI fetching, response parsing
@@ -398,7 +398,7 @@ Each custom mapping row must contain the Prometheus metric name, numeric field I
 Use the example config as a starting point:
 
 ```bash
-cp config.example.yaml config.yaml
+cp .config.yaml config.yaml
 ```
 
 Run tests:
@@ -458,10 +458,10 @@ cd "${PACKAGE}"
 ./vertiv_exporter --version
 ```
 
-Each archive contains the binary, `config.example.yaml`, `vertiv_exporter.service`, and this README. To run the binary directly:
+Each archive contains the binary, `.config.yaml`, `vertiv_exporter.service`, and this README. To run the binary directly:
 
 ```bash
-cp config.example.yaml config.yaml
+cp .config.yaml config.yaml
 # Edit config.yaml before starting.
 ./vertiv_exporter --config.file=config.yaml
 ```
@@ -479,7 +479,7 @@ sudo install -o root -g root -m 0755 \
   vertiv_exporter /usr/local/bin/vertiv_exporter
 sudo install -d -o root -g vertiv_exporter -m 0750 /etc/vertiv_exporter
 sudo install -o root -g vertiv_exporter -m 0640 \
-  config.example.yaml /etc/vertiv_exporter/config.yaml
+  .config.yaml /etc/vertiv_exporter/config.yaml
 sudo install -o root -g root -m 0644 \
   vertiv_exporter.service /etc/systemd/system/vertiv_exporter.service
 sudoedit /etc/vertiv_exporter/config.yaml
@@ -518,31 +518,45 @@ sudo systemctl status --no-pager vertiv_exporter
 
 ## Kubernetes
 
-[`kubernetes/deployment.yaml`](kubernetes/deployment.yaml) contains a sanitized example using only built-in Kubernetes resource types. It creates the `monitoring` namespace, a non-sensitive ConfigMap, a restricted ServiceAccount, the Deployment, and a ClusterIP Service. The manifest deliberately does not contain a Secret object, credential values, or a real Vertiv address.
+The recommended deployment method is the
+[`charts/vertiv-exporter`](charts/vertiv-exporter) Helm chart. It provides
+secure pod defaults, schema-validated target configuration, external Secret
+integration, an optional ServiceMonitor, and built-in PrometheusRule alerts.
+The chart never accepts credentials in its generated ConfigMap.
 
-Before applying it, replace the example host and device IDs in the ConfigMap, then create the credentials directly in the cluster:
+Create the shared credentials, prepare a non-sensitive values file as described
+in the [chart README](charts/vertiv-exporter/README.md), and install it:
 
 ```bash
 kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
-
 kubectl -n monitoring create secret generic vertiv-exporter-credentials \
   --from-literal=username='<VERTIV_USERNAME>' \
   --from-literal=password='<VERTIV_PASSWORD>'
+
+helm upgrade --install vertiv-exporter ./charts/vertiv-exporter \
+  --namespace monitoring \
+  --values vertiv-values.yaml
 ```
 
-Do not commit real credentials to the manifest. For production environments, prefer the cluster's existing secret-management solution instead of entering credentials on a command line.
+Use `config.existingSecret` instead when targets require different credential
+pairs. Enable `serviceMonitor.enabled` and `prometheusRule.enabled` only when
+Prometheus Operator CRDs are installed.
 
-Deploy and verify the exporter:
+Verify the exporter:
 
 ```bash
-kubectl apply -f kubernetes/deployment.yaml
 kubectl -n monitoring rollout status deployment/vertiv-exporter
 kubectl -n monitoring port-forward service/vertiv-exporter 9101:9101
 ```
 
-The metrics endpoint is then available at `http://127.0.0.1:9101/metrics`. The probes use `/` so they do not initiate Vertiv device scrapes. Prometheus instances using annotation discovery can use the included pod annotations; the Service is also available as `vertiv-exporter.monitoring.svc:9101`.
+The metrics endpoint is then available at `http://127.0.0.1:9101/metrics`.
+The probes use `/` so they do not initiate Vertiv device scrapes. Do not commit
+real credentials to a values file; for production environments, use the
+cluster's existing secret-management solution.
 
-The process reads its configuration and Secret-backed environment variables only at startup. Restart the Deployment after changing either resource:
+Helm upgrades roll the pods when the generated ConfigMap changes. Restart the
+Deployment after updating an external configuration Secret or the shared
+credential Secret because Helm does not manage those resources:
 
 ```bash
 kubectl -n monitoring rollout restart deployment/vertiv-exporter
@@ -569,10 +583,10 @@ Local single-platform build:
 
 ```bash
 docker build \
-  --build-arg VERSION=1.0.0 \
+  --build-arg VERSION=1.0.1 \
   --build-arg COMMIT=$(git rev-parse --short HEAD) \
   --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
-  -t vertiv-exporter:1.0.0 .
+  -t vertiv-exporter:1.0.1 .
 ```
 
 Multi-platform build and push:
@@ -580,10 +594,10 @@ Multi-platform build and push:
 ```bash
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  --build-arg VERSION=1.0.0 \
+  --build-arg VERSION=1.0.1 \
   --build-arg COMMIT=$(git rev-parse --short HEAD) \
   --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
-  -t your-registry/vertiv-exporter:1.0.0 \
+  -t your-registry/vertiv-exporter:1.0.1 \
   --push .
 ```
 
@@ -593,7 +607,7 @@ Run it with a mounted config file:
 docker run --rm -p 9101:9101 \
   --user "$(id -u):$(id -g)" \
   -v "$(pwd)/config.yaml:/app/config.yaml:ro" \
-  vertiv-exporter:1.0.0
+  vertiv-exporter:1.0.1
 ```
 
 The image expects the config file at `/app/config.yaml`. The local example runs with the host UID/GID so a `chmod 600` bind-mounted config remains readable without making it world-readable. Secret or ConfigMap mounts can keep the image's default `nonroot` user when their permissions allow UID `65532` to read the file. If `exporter.metrics_file` is set, mount that override file separately as read-only and use its in-container path in `config.yaml`.
@@ -602,7 +616,7 @@ The build context is restricted by `.dockerignore` to the build definition, `go.
 
 ## GitHub CI, Releases, and Container Images
 
-The GitHub Actions CI runs Go formatting, module verification, `go vet`, race-enabled tests, and a versioned binary build for pull requests, pushes to `main`, and `v*` tags. It then builds and smoke-tests the container on both `linux/amd64` and `linux/arm64`.
+The GitHub Actions CI runs Go formatting, module verification, `go vet`, race-enabled tests, a versioned binary build, Helm lint/render/package checks, and Prometheus rule validation for pull requests, pushes to `main`, and `v*` tags. It then builds and smoke-tests the container on both `linux/amd64` and `linux/arm64`.
 
 After all checks pass, pushes to `main` and `v*` tags publish a multi-platform image to:
 

@@ -81,6 +81,83 @@ jobs:
             ./cmd/vertiv_exporter
           "${RUNNER_TEMP}/vertiv_exporter" --version
 
+  helm:
+    name: Helm chart
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Helm
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5.0.0
+        with:
+          version: v4.2.0
+
+      - name: Lint chart
+        run: |
+          helm lint charts/vertiv-exporter --strict
+          helm lint charts/vertiv-exporter \
+            --strict \
+            --values charts/vertiv-exporter/ci/test-values.yaml
+          helm lint charts/vertiv-exporter \
+            --strict \
+            --values charts/vertiv-exporter/ci/existing-secret-values.yaml
+
+      - name: Render chart scenarios
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          helm template vertiv-exporter charts/vertiv-exporter \
+            --namespace monitoring \
+            > "${RUNNER_TEMP}/vertiv-default.yaml"
+
+          helm template vertiv-exporter charts/vertiv-exporter \
+            --namespace monitoring \
+            --values charts/vertiv-exporter/ci/test-values.yaml \
+            --api-versions monitoring.coreos.com/v1/ServiceMonitor \
+            --api-versions monitoring.coreos.com/v1/PrometheusRule \
+            > "${RUNNER_TEMP}/vertiv-prometheus.yaml"
+
+          helm template vertiv-exporter charts/vertiv-exporter \
+            --namespace monitoring \
+            --values charts/vertiv-exporter/ci/existing-secret-values.yaml \
+            > "${RUNNER_TEMP}/vertiv-existing-secret.yaml"
+
+          if grep -q '^kind: ConfigMap$' "${RUNNER_TEMP}/vertiv-existing-secret.yaml"; then
+            echo "The external configuration Secret scenario rendered a ConfigMap."
+            exit 1
+          fi
+
+      - name: Validate Prometheus rules
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          helm template vertiv-exporter charts/vertiv-exporter \
+            --namespace monitoring \
+            --values charts/vertiv-exporter/ci/test-values.yaml \
+            --show-only templates/prometheusrule.yaml \
+            > "${RUNNER_TEMP}/prometheusrule.yaml"
+
+          sed -n '/^spec:$/,$p' "${RUNNER_TEMP}/prometheusrule.yaml" \
+            | sed '1d; s/^  //' \
+            > "${RUNNER_TEMP}/vertiv.rules.yaml"
+
+          docker run --rm \
+            --volume "${RUNNER_TEMP}:/work:ro" \
+            --entrypoint /bin/promtool \
+            prom/prometheus:v3.11.3 \
+            check rules /work/vertiv.rules.yaml
+
+      - name: Package chart
+        run: |
+          mkdir -p "${RUNNER_TEMP}/chart-packages"
+          helm package charts/vertiv-exporter \
+            --destination "${RUNNER_TEMP}/chart-packages"
+
   container_smoke:
     name: Container smoke (${{ matrix.name }})
     runs-on: ubuntu-latest
@@ -136,6 +213,7 @@ jobs:
     needs:
       - test
       - container_smoke
+      - helm
     if: >-
       github.event_name != 'pull_request' &&
       (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
@@ -278,7 +356,7 @@ jobs:
 
             install -m 0644 \
               README.md \
-              config.example.yaml \
+              .config.yaml \
               packaging/systemd/vertiv_exporter.service \
               "${package_dir}/"
 

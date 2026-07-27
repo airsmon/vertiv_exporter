@@ -1,0 +1,140 @@
+{{- if .Values.prometheusRule.enabled }}
+{{- $rules := .Values.prometheusRule.rules }}
+{{- $hasExporterRules := $rules.exporterTargetDown.enabled }}
+{{- $hasDeviceRules := or $rules.thdCommunicationFault.enabled $rules.thdHighTemperature.enabled $rules.thdDoorOpen.enabled $rules.upsUtilityPowerLost.enabled $rules.upsHighLoad.enabled $rules.upsLowBatteryCapacity.enabled $rules.acActiveAlarm.enabled }}
+{{- $hasRules := or $hasExporterRules $hasDeviceRules .Values.prometheusRule.additionalGroups }}
+{{- $annotations := mergeOverwrite (dict) .Values.commonAnnotations .Values.prometheusRule.annotations }}
+{{- $labels := mergeOverwrite (dict) .Values.prometheusRule.labels (include "vertiv-exporter.labels" . | fromYaml) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "vertiv-exporter.fullname" . }}
+  namespace: {{ default .Release.Namespace .Values.prometheusRule.namespace }}
+  labels:
+    {{- toYaml $labels | nindent 4 }}
+  {{- with $annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if $hasRules }}
+  groups:
+    {{- if $hasExporterRules }}
+    - name: {{ include "vertiv-exporter.fullname" . }}.exporter
+      rules:
+        {{- with $rules.exporterTargetDown }}
+        {{- if .enabled }}
+        - alert: VertivExporterTargetDown
+          expr: "vertiv_exporter_up == 0"
+          for: {{ .for | quote }}
+          labels:
+            {{- $alertLabels := mergeOverwrite (dict) $.Values.prometheusRule.ruleLabels (dict "severity" .severity) }}
+            {{- toYaml $alertLabels | nindent 12 }}
+          annotations:
+            summary: {{ "Vertiv target {{ $labels.instance }} is unavailable" | quote }}
+            description: {{ "The exporter has failed to collect every configured device for target {{ $labels.instance }} for longer than the configured duration." | quote }}
+        {{- end }}
+        {{- end }}
+    {{- end }}
+    {{- if $hasDeviceRules }}
+    - name: {{ include "vertiv-exporter.fullname" . }}.devices
+      rules:
+        {{- with $rules.thdCommunicationFault }}
+        {{- if .enabled }}
+        - alert: VertivTHDCommunicationFault
+          expr: "vertiv_thd_comm_status != 0"
+          for: {{ .for | quote }}
+          labels:
+            {{- $alertLabels := mergeOverwrite (dict) $.Values.prometheusRule.ruleLabels (dict "severity" .severity) }}
+            {{- toYaml $alertLabels | nindent 12 }}
+          annotations:
+            summary: {{ "Vertiv THD communication fault on {{ $labels.instance }}/{{ $labels.device }}" | quote }}
+            description: {{ "Rack {{ $labels.rack }} has reported a THD communication fault for longer than the configured duration." | quote }}
+        {{- end }}
+        {{- end }}
+        {{- with $rules.thdHighTemperature }}
+        {{- if .enabled }}
+        - alert: VertivTHDHighTemperature
+          expr: "vertiv_thd_high_temp_alarm_rack_count > 0"
+          for: {{ .for | quote }}
+          labels:
+            {{- $alertLabels := mergeOverwrite (dict) $.Values.prometheusRule.ruleLabels (dict "severity" .severity) }}
+            {{- toYaml $alertLabels | nindent 12 }}
+          annotations:
+            summary: {{ "Vertiv THD high-temperature alarm on {{ $labels.instance }}/{{ $labels.device }}" | quote }}
+            description: {{ "{{ $value }} rack(s) currently report a high-temperature alarm." | quote }}
+        {{- end }}
+        {{- end }}
+        {{- with $rules.thdDoorOpen }}
+        {{- if .enabled }}
+        - alert: VertivTHDDoorOpen
+          expr: "vertiv_thd_door_status == 1"
+          for: {{ .for | quote }}
+          labels:
+            {{- $alertLabels := mergeOverwrite (dict) $.Values.prometheusRule.ruleLabels (dict "severity" .severity) }}
+            {{- toYaml $alertLabels | nindent 12 }}
+          annotations:
+            summary: {{ "Vertiv THD aisle door is open on {{ $labels.instance }}/{{ $labels.device }}" | quote }}
+            description: {{ "The {{ $labels.aisle }} aisle door for rack {{ $labels.rack }} has remained open or abnormal." | quote }}
+        {{- end }}
+        {{- end }}
+        {{- with $rules.upsUtilityPowerLost }}
+        {{- if .enabled }}
+        - alert: VertivUPSUtilityPowerLost
+          expr: "vertiv_ups_status_power_supply != 1"
+          for: {{ .for | quote }}
+          labels:
+            {{- $alertLabels := mergeOverwrite (dict) $.Values.prometheusRule.ruleLabels (dict "severity" .severity) }}
+            {{- toYaml $alertLabels | nindent 12 }}
+          annotations:
+            summary: {{ "Vertiv UPS utility power is unavailable on {{ $labels.instance }}/{{ $labels.device }}" | quote }}
+            description: {{ "The UPS power-supply status has remained outside the documented Utility Online state." | quote }}
+        {{- end }}
+        {{- end }}
+        {{- with $rules.upsHighLoad }}
+        {{- if .enabled }}
+        - alert: VertivUPSHighLoad
+          expr: {{ printf "vertiv_ups_output_load_percent > %v" .threshold | quote }}
+          for: {{ .for | quote }}
+          labels:
+            {{- $alertLabels := mergeOverwrite (dict) $.Values.prometheusRule.ruleLabels (dict "severity" .severity) }}
+            {{- toYaml $alertLabels | nindent 12 }}
+          annotations:
+            summary: {{ "Vertiv UPS output load is high on {{ $labels.instance }}/{{ $labels.device }}" | quote }}
+            description: {{ "UPS phase {{ $labels.phase }} output load is {{ $value }}%, above the configured threshold." | quote }}
+        {{- end }}
+        {{- end }}
+        {{- with $rules.upsLowBatteryCapacity }}
+        {{- if .enabled }}
+        - alert: VertivUPSLowBatteryCapacity
+          expr: {{ printf "vertiv_ups_battery_capacity_percent < %v" .threshold | quote }}
+          for: {{ .for | quote }}
+          labels:
+            {{- $alertLabels := mergeOverwrite (dict) $.Values.prometheusRule.ruleLabels (dict "severity" .severity) }}
+            {{- toYaml $alertLabels | nindent 12 }}
+          annotations:
+            summary: {{ "Vertiv UPS battery capacity is low on {{ $labels.instance }}/{{ $labels.device }}" | quote }}
+            description: {{ "UPS battery capacity is {{ $value }}%, below the configured threshold." | quote }}
+        {{- end }}
+        {{- end }}
+        {{- with $rules.acActiveAlarm }}
+        {{- if .enabled }}
+        - alert: VertivACActiveAlarm
+          expr: "vertiv_ac_system_alarm_active_count > 0"
+          for: {{ .for | quote }}
+          labels:
+            {{- $alertLabels := mergeOverwrite (dict) $.Values.prometheusRule.ruleLabels (dict "severity" .severity) }}
+            {{- toYaml $alertLabels | nindent 12 }}
+          annotations:
+            summary: {{ "Vertiv AC reports active alarms on {{ $labels.instance }}/{{ $labels.device }}" | quote }}
+            description: {{ "The AC device currently reports {{ $value }} active alarm state(s)." | quote }}
+        {{- end }}
+        {{- end }}
+    {{- end }}
+    {{- with .Values.prometheusRule.additionalGroups }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- else }}
+  groups: []
+  {{- end }}
+{{- end }}

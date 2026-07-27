@@ -1,0 +1,22 @@
+{{- $annotations := mergeOverwrite (dict) .Values.commonAnnotations .Values.service.annotations }}
+{{- $labels := mergeOverwrite (dict) .Values.service.labels (include "vertiv-exporter.labels" . | fromYaml) }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "vertiv-exporter.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- toYaml $labels | nindent 4 }}
+  {{- with $annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "vertiv-exporter.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: metrics
+      port: {{ .Values.service.port }}
+      targetPort: metrics
+      protocol: TCP

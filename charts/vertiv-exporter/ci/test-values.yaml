@@ -1,0 +1,39 @@
+commonLabels:
+  environment: ci
+
+config:
+  targets:
+    - name: example-site
+      host: https://vertiv.example.invalid
+      tlsSkipVerify: false
+      devices:
+        - name: AC_1
+          type: ac
+          equipId: 23
+        - name: ENV_THD
+          type: thd
+          equipId: -98
+        - name: UPS_1
+          type: ups
+          equipId: 26
+
+credentials:
+  existingSecret:
+    name: vertiv-exporter-credentials
+
+serviceMonitor:
+  enabled: true
+  labels:
+    prometheus: kube-prometheus
+
+prometheusRule:
+  enabled: true
+  labels:
+    prometheus: kube-prometheus
+  ruleLabels:
+    team: infrastructure
+  additionalGroups:
+    - name: vertiv-exporter.additional
+      rules:
+        - record: vertiv_exporter:targets_up:sum
+          expr: sum(vertiv_exporter_up)
