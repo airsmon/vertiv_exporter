@@ -1,7 +1,7 @@
 
 # Vertiv RDU-A G2智能监控单元
 
-<img width="1856" height="6818" alt="FireShot Capture 061 - 上海道客网络科技有限公司【尚浦中心】 - RDU-A G2智能监控单元 - Dashboards - Grafana_ -  grafana infra daocloud io" src="https://github.com/user-attachments/assets/0b399aa5-1e7c-450d-b201-b91e741485b6" />
+<img alt="FireShot Capture 061 - 上海道客网络科技有限公司【尚浦中心】 - RDU-A G2智能监控单元 - Dashboards - Grafana_ -  grafana infra daocloud io" src="https://github.com/user-attachments/assets/0b399aa5-1e7c-450d-b201-b91e741485b6" width="100%" />
 
 Prometheus exporter for Vertiv devices through the Vertiv CGI interface.
 
