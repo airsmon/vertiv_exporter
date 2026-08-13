@@ -143,9 +143,9 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "vertiv_exporter_up{job=~\"$job\",instance=~\"$instance\"}",
+          "expr": "vertiv_exporter_up{job=~\"$job\",exported_instance=~\"$target\"}",
           "instant": true,
-          "legendFormat": "{{instance}} / {{exported_instance}}",
+          "legendFormat": "{{exported_instance}}",
           "range": false,
           "refId": "A"
         }
@@ -225,8 +225,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum by (instance, le) (rate(vertiv_exporter_scrape_duration_seconds_bucket{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval])))",
-          "legendFormat": "{{instance}} p95",
+          "expr": "histogram_quantile(0.95, sum by (job, le) (rate(vertiv_exporter_scrape_duration_seconds_bucket{job=~\"$job\"}[$__rate_interval])))",
+          "legendFormat": "{{job}} p95",
           "range": true,
           "refId": "A"
         }
@@ -294,9 +294,9 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "increase(vertiv_exporter_scrape_failures_total{job=~\"$job\",instance=~\"$instance\"}[$__range])",
+          "expr": "sum by (job) (increase(vertiv_exporter_scrape_failures_total{job=~\"$job\"}[$__range]))",
           "instant": true,
-          "legendFormat": "{{instance}}",
+          "legendFormat": "{{job}}",
           "range": false,
           "refId": "A"
         }
@@ -389,7 +389,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "vertiv_thd_temperature_celsius{job=~\"$job\",instance=~\"$instance\"}",
+          "expr": "max without (instance, pod) (vertiv_thd_temperature_celsius{job=~\"$job\",exported_instance=~\"$target\"})",
           "legendFormat": "{{device}} {{rack}} {{aisle}} {{position}}",
           "range": true,
           "refId": "A"
@@ -470,7 +470,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "vertiv_thd_humidity_percent{job=~\"$job\",instance=~\"$instance\"}",
+          "expr": "max without (instance, pod) (vertiv_thd_humidity_percent{job=~\"$job\",exported_instance=~\"$target\"})",
           "legendFormat": "{{device}} {{rack}} {{aisle}}",
           "range": true,
           "refId": "A"
@@ -549,7 +549,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "vertiv_thd_door_status{job=~\"$job\",instance=~\"$instance\"}",
+          "expr": "max without (instance, pod) (vertiv_thd_door_status{job=~\"$job\",exported_instance=~\"$target\"})",
           "legendFormat": "{{device}} {{rack}} {{aisle}}",
           "range": true,
           "refId": "A"
@@ -628,7 +628,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "vertiv_thd_comm_status{job=~\"$job\",instance=~\"$instance\"}",
+          "expr": "max without (instance, pod) (vertiv_thd_comm_status{job=~\"$job\",exported_instance=~\"$target\"})",
           "instant": true,
           "legendFormat": "{{device}} {{rack}}",
           "range": false,
@@ -694,7 +694,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "vertiv_thd_high_temp_alarm_rack_count{job=~\"$job\",instance=~\"$instance\"}",
+          "expr": "max without (instance, pod) (vertiv_thd_high_temp_alarm_rack_count{job=~\"$job\",exported_instance=~\"$target\"})",
           "instant": true,
           "legendFormat": "{{device}}",
           "range": false,
@@ -739,7 +739,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "vertiv_thd_rack_id{job=~\"$job\",instance=~\"$instance\"}",
+          "expr": "max without (instance, pod) (vertiv_thd_rack_id{job=~\"$job\",exported_instance=~\"$target\"})",
           "format": "table",
           "instant": true,
           "legendFormat": "{{rack}}",
@@ -848,8 +848,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"vertiv_ups_(input|bypass)_(phase|line)_voltage_volts\",job=~\"$job\",instance=~\"$instance\"}",
-          "legendFormat": "{{device}} {{__name__}} {{phase}}{{line}}",
+          "expr": "max without (instance, pod) (label_replace({__name__=~\"vertiv_ups_(input|bypass)_(phase|line)_voltage_volts\",job=~\"$job\",exported_instance=~\"$target\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\"))",
+          "legendFormat": "{{device}} {{metric}} {{phase}}{{line}}",
           "range": true,
           "refId": "A"
         }
@@ -927,7 +927,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "vertiv_ups_output_phase_voltage_volts{job=~\"$job\",instance=~\"$instance\"}",
+          "expr": "max without (instance, pod) (vertiv_ups_output_phase_voltage_volts{job=~\"$job\",exported_instance=~\"$target\"})",
           "legendFormat": "{{device}} phase {{phase}}",
           "range": true,
           "refId": "A"
@@ -1006,8 +1006,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"vertiv_ups_(input|output)_current_amperes\",job=~\"$job\",instance=~\"$instance\"}",
-          "legendFormat": "{{device}} {{__name__}} {{phase}}",
+          "expr": "max without (instance, pod) (label_replace({__name__=~\"vertiv_ups_(input|output)_current_amperes\",job=~\"$job\",exported_instance=~\"$target\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\"))",
+          "legendFormat": "{{device}} {{metric}} {{phase}}",
           "range": true,
           "refId": "A"
         }
@@ -1085,8 +1085,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"vertiv_ups_(input|output|bypass)_frequency_hz\",job=~\"$job\",instance=~\"$instance\"}",
-          "legendFormat": "{{device}} {{__name__}}",
+          "expr": "max without (instance, pod) (label_replace({__name__=~\"vertiv_ups_(input|output|bypass)_frequency_hz\",job=~\"$job\",exported_instance=~\"$target\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\"))",
+          "legendFormat": "{{device}} {{metric}}",
           "range": true,
           "refId": "A"
         }
@@ -1188,7 +1188,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "vertiv_ups_output_active_power_kilowatts{job=~\"$job\",instance=~\"$instance\"}",
+          "expr": "max without (instance, pod) (vertiv_ups_output_active_power_kilowatts{job=~\"$job\",exported_instance=~\"$target\"})",
           "legendFormat": "active",
           "range": true,
           "refId": "A"
@@ -1199,7 +1199,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "vertiv_ups_output_apparent_power_kva{job=~\"$job\",instance=~\"$instance\"}",
+          "expr": "max without (instance, pod) (vertiv_ups_output_apparent_power_kva{job=~\"$job\",exported_instance=~\"$target\"})",
           "legendFormat": "apparent",
           "range": true,
           "refId": "B"
@@ -1281,7 +1281,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "vertiv_ups_output_load_percent{job=~\"$job\",instance=~\"$instance\"}",
+          "expr": "max without (instance, pod) (vertiv_ups_output_load_percent{job=~\"$job\",exported_instance=~\"$target\"})",
           "legendFormat": "{{device}} phase {{phase}}",
           "range": true,
           "refId": "A"
@@ -1292,8 +1292,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"vertiv_ups_(input|output)_power_factor\",job=~\"$job\",instance=~\"$instance\"} * 100",
-          "legendFormat": "{{device}} {{__name__}} {{phase}}",
+          "expr": "max without (instance, pod) (label_replace({__name__=~\"vertiv_ups_(input|output)_power_factor\",job=~\"$job\",exported_instance=~\"$target\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\")) * 100",
+          "legendFormat": "{{device}} {{metric}} {{phase}}",
           "range": true,
           "refId": "B"
         }
@@ -1370,8 +1370,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"vertiv_ups_battery_.*(voltage_volts|current_amperes)\",job=~\"$job\",instance=~\"$instance\"}",
-          "legendFormat": "{{device}} {{__name__}}",
+          "expr": "max without (instance, pod) (label_replace({__name__=~\"vertiv_ups_battery_.*(voltage_volts|current_amperes)\",job=~\"$job\",exported_instance=~\"$target\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\"))",
+          "legendFormat": "{{device}} {{metric}}",
           "range": true,
           "refId": "A"
         }
@@ -1414,10 +1414,10 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"vertiv_ups_(battery_(capacity_percent|backup_time_minutes|discharging_time_seconds|discharge_count_total)|input_energy_kwh_total|output_energy_kwh_total|ambient_temperature_celsius|running_time_days|parallel_machine_count)\",job=~\"$job\",instance=~\"$instance\"}",
+          "expr": "max without (instance, pod) (label_replace({__name__=~\"vertiv_ups_(battery_(capacity_percent|backup_time_minutes|discharging_time_seconds|discharge_count_total)|input_energy_kwh_total|output_energy_kwh_total|ambient_temperature_celsius|running_time_days|parallel_machine_count)\",job=~\"$job\",exported_instance=~\"$target\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\"))",
           "format": "table",
           "instant": true,
-          "legendFormat": "{{__name__}}",
+          "legendFormat": "{{metric}}",
           "range": false,
           "refId": "A"
         }
@@ -1460,10 +1460,10 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"vertiv_ups_status_.*\",job=~\"$job\",instance=~\"$instance\"}",
+          "expr": "max without (instance, pod) (label_replace({__name__=~\"vertiv_ups_status_.*\",job=~\"$job\",exported_instance=~\"$target\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\"))",
           "format": "table",
           "instant": true,
-          "legendFormat": "{{__name__}}",
+          "legendFormat": "{{metric}}",
           "range": false,
           "refId": "A"
         }
@@ -1554,8 +1554,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"vertiv_ac_temperature_.*_celsius\",job=~\"$job\",instance=~\"$instance\",device=~\"$device\"}",
-          "legendFormat": "{{device}} {{__name__}}",
+          "expr": "max without (instance, pod) (label_replace({__name__=~\"vertiv_ac_temperature_.*_celsius\",job=~\"$job\",exported_instance=~\"$target\",device=~\"$device\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\"))",
+          "legendFormat": "{{device}} {{metric}}",
           "range": true,
           "refId": "A"
         }
@@ -1633,8 +1633,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"vertiv_ac_humidity_.*_percent\",job=~\"$job\",instance=~\"$instance\",device=~\"$device\"}",
-          "legendFormat": "{{device}} {{__name__}}",
+          "expr": "max without (instance, pod) (label_replace({__name__=~\"vertiv_ac_humidity_.*_percent\",job=~\"$job\",exported_instance=~\"$target\",device=~\"$device\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\"))",
+          "legendFormat": "{{device}} {{metric}}",
           "range": true,
           "refId": "A"
         }
@@ -1712,8 +1712,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"vertiv_ac_pressure_.*_bar\",job=~\"$job\",instance=~\"$instance\",device=~\"$device\"}",
-          "legendFormat": "{{device}} {{__name__}}",
+          "expr": "max without (instance, pod) (label_replace({__name__=~\"vertiv_ac_pressure_.*_bar\",job=~\"$job\",exported_instance=~\"$target\",device=~\"$device\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\"))",
+          "legendFormat": "{{device}} {{metric}}",
           "range": true,
           "refId": "A"
         }
@@ -1758,8 +1758,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"vertiv_ac_electrical_.*\",job=~\"$job\",instance=~\"$instance\",device=~\"$device\"}",
-          "legendFormat": "{{device}} {{__name__}}",
+          "expr": "max without (instance, pod) (label_replace({__name__=~\"vertiv_ac_electrical_.*\",job=~\"$job\",exported_instance=~\"$target\",device=~\"$device\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\"))",
+          "legendFormat": "{{device}} {{metric}}",
           "range": true,
           "refId": "A"
         }
@@ -1804,8 +1804,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"vertiv_ac_(compressor|fan|eev)_.*\",__name__!~\".*_total\",job=~\"$job\",instance=~\"$instance\",device=~\"$device\"}",
-          "legendFormat": "{{device}} {{__name__}}",
+          "expr": "max without (instance, pod) (label_replace({__name__=~\"vertiv_ac_(compressor|fan|eev)_.*\",__name__!~\".*_total\",job=~\"$job\",exported_instance=~\"$target\",device=~\"$device\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\"))",
+          "legendFormat": "{{device}} {{metric}}",
           "range": true,
           "refId": "A"
         }
@@ -1848,10 +1848,10 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"vertiv_ac_(compressor|fan|pump|humidifier|electric_heating)_.*_total|vertiv_ac_(dehumidification|filter)_.*\",job=~\"$job\",instance=~\"$instance\",device=~\"$device\"}",
+          "expr": "max without (instance, pod) (label_replace({__name__=~\"vertiv_ac_(compressor|fan|pump|humidifier|electric_heating)_.*_total|vertiv_ac_(dehumidification|filter)_.*\",job=~\"$job\",exported_instance=~\"$target\",device=~\"$device\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\"))",
           "format": "table",
           "instant": true,
-          "legendFormat": "{{__name__}}",
+          "legendFormat": "{{metric}}",
           "range": false,
           "refId": "A"
         }
@@ -1894,10 +1894,10 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"vertiv_ac_status_.*\",job=~\"$job\",instance=~\"$instance\",device=~\"$device\"}",
+          "expr": "max without (instance, pod) (label_replace({__name__=~\"vertiv_ac_status_.*\",job=~\"$job\",exported_instance=~\"$target\",device=~\"$device\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\"))",
           "format": "table",
           "instant": true,
-          "legendFormat": "{{__name__}}",
+          "legendFormat": "{{metric}}",
           "range": false,
           "refId": "A"
         }
@@ -1940,10 +1940,10 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"vertiv_ac_alarm_attr_.*\",job=~\"$job\",instance=~\"$instance\",device=~\"$device\"}",
+          "expr": "max without (instance, pod) (label_replace({__name__=~\"vertiv_ac_alarm_attr_.*\",job=~\"$job\",exported_instance=~\"$target\",device=~\"$device\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\"))",
           "format": "table",
           "instant": true,
-          "legendFormat": "{{__name__}}",
+          "legendFormat": "{{metric}}",
           "range": false,
           "refId": "A"
         }
@@ -1986,10 +1986,10 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "{__name__=~\"vertiv_ac_system_.*\",job=~\"$job\",instance=~\"$instance\",device=~\"$device\"}",
+          "expr": "max without (instance, pod) (label_replace({__name__=~\"vertiv_ac_system_.*\",job=~\"$job\",exported_instance=~\"$target\",device=~\"$device\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\"))",
           "format": "table",
           "instant": true,
-          "legendFormat": "{{__name__}}",
+          "legendFormat": "{{metric}}",
           "range": false,
           "refId": "A"
         }
@@ -2033,7 +2033,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "vertiv_ac_signal_value{job=~\"$job\",instance=~\"$instance\",device=~\"$device\"}",
+          "expr": "max without (instance, pod) (vertiv_ac_signal_value{job=~\"$job\",exported_instance=~\"$target\",device=~\"$device\"})",
           "format": "table",
           "instant": true,
           "legendFormat": "{{signal_name}} #{{occurrence}}",
@@ -2108,15 +2108,15 @@
           "type": "prometheus",
           "uid": "${DS_PROMETHEUS}"
         },
-        "definition": "label_values(vertiv_exporter_up{job=~\"$job\"}, instance)",
+        "definition": "label_values(vertiv_exporter_up{job=~\"$job\"}, exported_instance)",
         "hide": 0,
         "includeAll": true,
-        "label": "Exporter instance",
+        "label": "Vertiv target",
         "multi": true,
-        "name": "instance",
+        "name": "target",
         "options": [],
         "query": {
-          "query": "label_values(vertiv_exporter_up{job=~\"$job\"}, instance)",
+          "query": "label_values(vertiv_exporter_up{job=~\"$job\"}, exported_instance)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
@@ -2136,7 +2136,7 @@
           "type": "prometheus",
           "uid": "${DS_PROMETHEUS}"
         },
-        "definition": "label_values({__name__=~\"vertiv_ac_.*\",job=~\"$job\",instance=~\"$instance\"}, device)",
+        "definition": "label_values({__name__=~\"vertiv_ac_.*\",job=~\"$job\",exported_instance=~\"$target\"}, device)",
         "hide": 0,
         "includeAll": true,
         "label": "AC device",
@@ -2144,7 +2144,7 @@
         "name": "device",
         "options": [],
         "query": {
-          "query": "label_values({__name__=~\"vertiv_ac_.*\",job=~\"$job\",instance=~\"$instance\"}, device)",
+          "query": "label_values({__name__=~\"vertiv_ac_.*\",job=~\"$job\",exported_instance=~\"$target\"}, device)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
