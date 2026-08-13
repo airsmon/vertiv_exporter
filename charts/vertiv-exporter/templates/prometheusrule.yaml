@@ -31,8 +31,8 @@ spec:
             {{- $alertLabels := mergeOverwrite (dict) $.Values.prometheusRule.ruleLabels (dict "severity" .severity) }}
             {{- toYaml $alertLabels | nindent 12 }}
           annotations:
-            summary: {{ "Vertiv target {{ $labels.instance }} is unavailable" | quote }}
-            description: {{ "The exporter has failed to collect every configured device for target {{ $labels.instance }} for longer than the configured duration." | quote }}
+            summary: {{ "Vertiv target {{ $labels.target }} is unavailable" | quote }}
+            description: {{ "The exporter has failed to collect every configured device for target {{ $labels.target }} for longer than the configured duration." | quote }}
         {{- end }}
         {{- end }}
     {{- end }}
@@ -48,7 +48,7 @@ spec:
             {{- $alertLabels := mergeOverwrite (dict) $.Values.prometheusRule.ruleLabels (dict "severity" .severity) }}
             {{- toYaml $alertLabels | nindent 12 }}
           annotations:
-            summary: {{ "Vertiv THD communication fault on {{ $labels.instance }}/{{ $labels.device }}" | quote }}
+            summary: {{ "Vertiv THD communication fault on {{ $labels.target }}/{{ $labels.device }}" | quote }}
             description: {{ "Rack {{ $labels.rack }} has reported a THD communication fault for longer than the configured duration." | quote }}
         {{- end }}
         {{- end }}
@@ -61,7 +61,7 @@ spec:
             {{- $alertLabels := mergeOverwrite (dict) $.Values.prometheusRule.ruleLabels (dict "severity" .severity) }}
             {{- toYaml $alertLabels | nindent 12 }}
           annotations:
-            summary: {{ "Vertiv THD high-temperature alarm on {{ $labels.instance }}/{{ $labels.device }}" | quote }}
+            summary: {{ "Vertiv THD high-temperature alarm on {{ $labels.target }}/{{ $labels.device }}" | quote }}
             description: {{ "{{ $value }} rack(s) currently report a high-temperature alarm." | quote }}
         {{- end }}
         {{- end }}
@@ -74,7 +74,7 @@ spec:
             {{- $alertLabels := mergeOverwrite (dict) $.Values.prometheusRule.ruleLabels (dict "severity" .severity) }}
             {{- toYaml $alertLabels | nindent 12 }}
           annotations:
-            summary: {{ "Vertiv THD aisle door is open on {{ $labels.instance }}/{{ $labels.device }}" | quote }}
+            summary: {{ "Vertiv THD aisle door is open on {{ $labels.target }}/{{ $labels.device }}" | quote }}
             description: {{ "The {{ $labels.aisle }} aisle door for rack {{ $labels.rack }} has remained open or abnormal." | quote }}
         {{- end }}
         {{- end }}
@@ -87,7 +87,7 @@ spec:
             {{- $alertLabels := mergeOverwrite (dict) $.Values.prometheusRule.ruleLabels (dict "severity" .severity) }}
             {{- toYaml $alertLabels | nindent 12 }}
           annotations:
-            summary: {{ "Vertiv UPS utility power is unavailable on {{ $labels.instance }}/{{ $labels.device }}" | quote }}
+            summary: {{ "Vertiv UPS utility power is unavailable on {{ $labels.target }}/{{ $labels.device }}" | quote }}
             description: {{ "The UPS power-supply status has remained outside the documented Utility Online state." | quote }}
         {{- end }}
         {{- end }}
@@ -100,7 +100,7 @@ spec:
             {{- $alertLabels := mergeOverwrite (dict) $.Values.prometheusRule.ruleLabels (dict "severity" .severity) }}
             {{- toYaml $alertLabels | nindent 12 }}
           annotations:
-            summary: {{ "Vertiv UPS output load is high on {{ $labels.instance }}/{{ $labels.device }}" | quote }}
+            summary: {{ "Vertiv UPS output load is high on {{ $labels.target }}/{{ $labels.device }}" | quote }}
             description: {{ "UPS phase {{ $labels.phase }} output load is {{ $value }}%, above the configured threshold." | quote }}
         {{- end }}
         {{- end }}
@@ -113,7 +113,7 @@ spec:
             {{- $alertLabels := mergeOverwrite (dict) $.Values.prometheusRule.ruleLabels (dict "severity" .severity) }}
             {{- toYaml $alertLabels | nindent 12 }}
           annotations:
-            summary: {{ "Vertiv UPS battery capacity is low on {{ $labels.instance }}/{{ $labels.device }}" | quote }}
+            summary: {{ "Vertiv UPS battery capacity is low on {{ $labels.target }}/{{ $labels.device }}" | quote }}
             description: {{ "UPS battery capacity is {{ $value }}%, below the configured threshold." | quote }}
         {{- end }}
         {{- end }}
@@ -126,7 +126,7 @@ spec:
             {{- $alertLabels := mergeOverwrite (dict) $.Values.prometheusRule.ruleLabels (dict "severity" .severity) }}
             {{- toYaml $alertLabels | nindent 12 }}
           annotations:
-            summary: {{ "Vertiv AC reports active alarms on {{ $labels.instance }}/{{ $labels.device }}" | quote }}
+            summary: {{ "Vertiv AC reports active alarms on {{ $labels.target }}/{{ $labels.device }}" | quote }}
             description: {{ "The AC device currently reports {{ $value }} active alarm state(s)." | quote }}
         {{- end }}
         {{- end }}

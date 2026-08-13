@@ -7,11 +7,35 @@
 1. 在 Grafana 中打开 **Dashboards → New → Import**。
 2. 上传 [`vertiv_grafana_dashboard.json`](vertiv_grafana_dashboard.json)。
 3. 在导入页为 `DS_PROMETHEUS` 选择实际的 Prometheus 数据源。
-4. 导入后通过顶部的 `job`、`instance` 和 `device` 变量切换采集任务、Exporter 实例和 AC 设备。
+4. 导入后通过顶部的 `job`、`target` 和 `device` 变量切换采集任务、Vertiv 控制器和 AC 设备。仓库内 Dashboard 的默认控制器为 `SH-SP-06-7`，变量选项仍由 Prometheus 动态生成。
 
-Dashboard 不包含硬编码的数据源 UID。所有面板均使用 `${DS_PROMETHEUS}`，PromQL 同时带有 `job` / `instance` 过滤条件。
+Dashboard 不包含硬编码的数据源 UID。所有面板均使用 `${DS_PROMETHEUS}`；控制器由 Exporter 显式导出的 `target` Label 筛选。Prometheus 的 `instance` 仅表示抓取端点，不参与控制器选择，因此 Pod 重建不会在变量中产生新的控制器。
 
-> `instance` 是 Prometheus 的抓取目标标签。Exporter 自身也导出了同名标签；在 Prometheus 默认 `honor_labels: false` 配置下，Exporter 原始标签会被重命名为 `exported_instance`。需要按 Vertiv 目标名称筛选时，请根据实际 Prometheus 配置选择对应标签。
+## Label 迁移兼容
+
+当前 Dashboard 同时兼容新的 `target` Label 和保留期内的旧数据。旧版 Exporter 将控制器名称导出为 `instance`；在 Prometheus 默认的 `honor_labels: false` 配置下，这部分历史数据存储为 `exported_instance`。兼容分支仅选择缺少原生 `target` 的旧样本，再通过 `label_replace` 将 `exported_instance` 规范化为 `target`：
+
+```promql
+max without (instance, pod, exported_instance) (
+  metric{job=~"$job", target=~"$target", target!=""}
+  or
+  label_replace(
+    metric{
+      job=~"$job",
+      target="",
+      exported_instance=~"$target",
+      exported_instance!=""
+    },
+    "target", "$1", "exported_instance", "(.+)"
+  )
+)
+```
+
+`target!=""` 和旧分支的 `target=""` 保证同一份新样本不会被读取两次；外层聚合去除旧 Pod IP、Pod 名和迁移 Label，使同一控制器在迁移前后的数据保持为一条时序。多指标查询在聚合前将 `__name__` 复制到 `metric`，避免不同指标被合并，图例相应使用 `{{metric}}`。
+
+Exporter 自身的 `vertiv_exporter_scrape_failures_total` 仍按 Counter 处理：先对每个抓取时序执行 `increase`，再按 `job` 求和。UPS 累计 Counter 在表格中展示当前累计值，因此与其他当前值一样仅使用兼容聚合，不计算速率。AC 名称以 `_total` 结尾的字段目前由 Exporter 作为 Gauge 导出，也不使用 `rate` 或 `increase`。
+
+当前 10 天旧数据超过 Prometheus 保留期后（建议额外保留一天安全余量），可以删除 `exported_instance` 兼容分支；`target` 变量和查询接口无需再次变更。
 
 ## 面板与指标
 

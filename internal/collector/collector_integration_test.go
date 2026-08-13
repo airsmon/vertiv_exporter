@@ -70,6 +70,9 @@ func TestCollectorScrapesCGIIntoPrometheusMetrics(t *testing.T) {
 	assertMetricValue(t, families, "vertiv_ac_temperature_return_air_celsius", 28.6)
 	assertMetricValue(t, families, "vertiv_ac_status_compressor_output", 1)
 	assertMetricValue(t, families, "vertiv_exporter_up", 1)
+	assertMetricLabels(t, findMetricFamily(families, "vertiv_exporter_up").Metric[0], map[string]string{
+		"target": "dc-rack-01",
+	})
 
 	duration := findMetricFamily(families, "vertiv_exporter_scrape_duration_seconds")
 	if duration == nil || len(duration.Metric) != 1 {
@@ -77,6 +80,70 @@ func TestCollectorScrapesCGIIntoPrometheusMetrics(t *testing.T) {
 	}
 	if got, want := duration.Metric[0].GetHistogram().GetSampleCount(), uint64(1); got != want {
 		t.Fatalf("duration sample count = %d, want %d", got, want)
+	}
+	assertMetricLabels(t, duration.Metric[0], map[string]string{})
+}
+
+func TestCollectorExportsDistinctUpMetricForEachTarget(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/cgi-bin/login.cgi":
+			http.SetCookie(w, &http.Cookie{Name: "session", Value: "authenticated", Path: "/"})
+			w.WriteHeader(http.StatusOK)
+		case "/cgi-bin/p05_equip_sample.cgi":
+			_, _ = w.Write([]byte("3021,AC_1,ENP_AC_SRVII[COM]^2,Return air temperature measurement,28.6,℃;"))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	cfg := &config.Config{
+		Exporter: config.ExporterConfig{ScrapeTimeout: 2 * time.Second},
+		Targets: []config.Target{
+			{
+				Name:    "SH-SP-06-7",
+				Host:    server.URL,
+				Devices: []config.Device{{Name: "AC_1", Type: "ac", EquipID: 23}},
+			},
+			{
+				Name:    "SH-SP-06-8",
+				Host:    server.URL,
+				Devices: []config.Device{{Name: "AC_1", Type: "ac", EquipID: 23}},
+			},
+		},
+	}
+
+	col, err := New(context.Background(), cfg)
+	if err != nil {
+		t.Fatalf("New returned error: %v", err)
+	}
+	defer col.Close()
+
+	registry := prometheus.NewRegistry()
+	if err := registry.Register(col); err != nil {
+		t.Fatalf("register collector: %v", err)
+	}
+	families, err := registry.Gather()
+	if err != nil {
+		t.Fatalf("gather metrics: %v", err)
+	}
+
+	up := findMetricFamily(families, "vertiv_exporter_up")
+	if up == nil || len(up.Metric) != 2 {
+		t.Fatalf("up metric count = %d, want 2", metricFamilyLen(up))
+	}
+
+	targets := make(map[string]float64, len(up.Metric))
+	for _, metric := range up.Metric {
+		labels := metricLabelsMap(metric)
+		assertMetricLabels(t, metric, map[string]string{"target": labels["target"]})
+		targets[labels["target"]] = metric.GetGauge().GetValue()
+	}
+	for _, target := range []string{"SH-SP-06-7", "SH-SP-06-8"} {
+		if got, ok := targets[target]; !ok || got != 1 {
+			t.Fatalf("up metric for target %q = %v (present=%v), want 1", target, got, ok)
+		}
 	}
 }
 
@@ -164,4 +231,32 @@ func findMetricFamily(families []*dto.MetricFamily, name string) *dto.MetricFami
 		}
 	}
 	return nil
+}
+
+func assertMetricLabels(t *testing.T, metric *dto.Metric, want map[string]string) {
+	t.Helper()
+	got := metricLabelsMap(metric)
+	if len(got) != len(want) {
+		t.Fatalf("metric labels = %v, want %v", got, want)
+	}
+	for name, value := range want {
+		if got[name] != value {
+			t.Fatalf("metric label %q = %q, want %q (all labels: %v)", name, got[name], value, got)
+		}
+	}
+}
+
+func metricLabelsMap(metric *dto.Metric) map[string]string {
+	labels := make(map[string]string, len(metric.GetLabel()))
+	for _, label := range metric.GetLabel() {
+		labels[label.GetName()] = label.GetValue()
+	}
+	return labels
+}
+
+func metricFamilyLen(family *dto.MetricFamily) int {
+	if family == nil {
+		return 0
+	}
+	return len(family.Metric)
 }

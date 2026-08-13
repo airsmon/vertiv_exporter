@@ -43,6 +43,19 @@ func TestACFixtureEndToEnd(t *testing.T) {
 	if got := values["vertiv_ac_status_compressor_output"]; got != 1 {
 		t.Fatalf("compressor output = %v, want 1", got)
 	}
+
+	assertPrometheusMetricLabels(t, metrics, "vertiv_ac_temperature_return_air_celsius", map[string]string{
+		"target":   "dc-rack-01",
+		"device":   "AC_1",
+		"equip_id": "23",
+	})
+	assertPrometheusMetricLabels(t, metrics, "vertiv_ac_signal_value", map[string]string{
+		"target":      "dc-rack-01",
+		"device":      "AC_1",
+		"equip_id":    "23",
+		"signal_name": "Return air temperature measurement",
+		"occurrence":  "1",
+	})
 }
 
 func TestACRawSignalsIncludeUnmappedAndDuplicateNames(t *testing.T) {
@@ -146,6 +159,15 @@ func TestTHDFixtureEndToEnd(t *testing.T) {
 	if !foundRoundedHumidity {
 		t.Fatal("did not find rounded THD humidity metric")
 	}
+
+	assertPrometheusMetricLabels(t, metrics, "vertiv_thd_temperature_celsius", map[string]string{
+		"target":   "dc-rack-01",
+		"device":   "ENV_THD",
+		"equip_id": "-98",
+		"rack":     "RACK1",
+		"aisle":    "cool",
+		"position": "top",
+	})
 }
 
 func TestUPSFixtureEndToEnd(t *testing.T) {
@@ -189,6 +211,47 @@ func TestUPSFixtureEndToEnd(t *testing.T) {
 	if !foundCounter {
 		t.Fatal("did not find expected UPS counter metric value")
 	}
+
+	assertPrometheusMetricLabels(t, metrics, "vertiv_ups_input_phase_voltage_volts", map[string]string{
+		"target":   "dc-rack-01",
+		"device":   "UPS_1",
+		"equip_id": "26",
+		"phase":    "A",
+	})
+}
+
+func assertPrometheusMetricLabels(t *testing.T, metrics []prometheus.Metric, metricName string, want map[string]string) {
+	t.Helper()
+	var candidates []map[string]string
+	for _, metric := range metrics {
+		if metricNameFromDesc(metric.Desc().String()) != metricName {
+			continue
+		}
+
+		var pb dto.Metric
+		if err := metric.Write(&pb); err != nil {
+			t.Fatalf("write metric %q: %v", metricName, err)
+		}
+		labels := metricLabelsMap(&pb)
+		candidates = append(candidates, labels)
+		if metricLabelsEqual(labels, want) {
+			return
+		}
+	}
+
+	t.Fatalf("metric %q with labels %v not found; candidates: %v", metricName, want, candidates)
+}
+
+func metricLabelsEqual(got, want map[string]string) bool {
+	if len(got) != len(want) {
+		return false
+	}
+	for name, value := range want {
+		if got[name] != value {
+			return false
+		}
+	}
+	return true
 }
 
 func mustACDescs(t *testing.T) map[int]*prometheus.Desc {

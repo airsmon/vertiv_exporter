@@ -19,7 +19,7 @@ import (
 	"vertiv_exporter/internal/config"
 )
 
-var metricLabels = []string{"instance", "device", "equip_id"}
+var metricLabels = []string{"target", "device", "equip_id"}
 
 type targetState struct {
 	target config.Target
@@ -78,7 +78,7 @@ func New(parent context.Context, cfg *config.Config) (*VertivCollector, error) {
 		upDesc: prometheus.NewDesc(
 			"vertiv_exporter_up",
 			"Whether the target scrape succeeded",
-			[]string{"instance"},
+			[]string{"target"},
 			nil,
 		),
 		duration: prometheus.NewHistogram(prometheus.HistogramOpts{
@@ -105,7 +105,7 @@ func newACSignalDesc() *prometheus.Desc {
 	return prometheus.NewDesc(
 		"vertiv_ac_signal_value",
 		"Raw AC signal value reported by the Vertiv device",
-		[]string{"instance", "device", "equip_id", "signal_name", "occurrence"},
+		[]string{"target", "device", "equip_id", "signal_name", "occurrence"},
 		nil,
 	)
 }
@@ -190,8 +190,8 @@ func (c *VertivCollector) Collect(ch chan<- prometheus.Metric) {
 		ch <- metric
 	}
 
-	for instance, up := range upMap {
-		ch <- prometheus.MustNewConstMetric(c.upDesc, prometheus.GaugeValue, up, instance)
+	for target, up := range upMap {
+		ch <- prometheus.MustNewConstMetric(c.upDesc, prometheus.GaugeValue, up, target)
 	}
 
 	c.duration.Observe(time.Since(start).Seconds())
@@ -199,12 +199,12 @@ func (c *VertivCollector) Collect(ch chan<- prometheus.Metric) {
 	c.errors.Collect(ch)
 }
 
-func (c *VertivCollector) buildDeviceMetrics(instance string, device config.Device, samples map[int]client.Sample) []prometheus.Metric {
+func (c *VertivCollector) buildDeviceMetrics(target string, device config.Device, samples map[int]client.Sample) []prometheus.Metric {
 	if isTHDDevice(device) {
-		return buildTHDMetrics(c.thdDescs, instance, device, samples)
+		return buildTHDMetrics(c.thdDescs, target, device, samples)
 	}
 	if isUPSDevice(device) {
-		return buildUPSMetrics(c.upsDescs, instance, device, samples)
+		return buildUPSMetrics(c.upsDescs, target, device, samples)
 	}
 
 	fieldIDs := make([]int, 0, len(samples))
@@ -224,7 +224,7 @@ func (c *VertivCollector) buildDeviceMetrics(instance string, device config.Devi
 				c.acSignal,
 				prometheus.GaugeValue,
 				sample.Value,
-				instance,
+				target,
 				device.Name,
 				strconv.Itoa(device.EquipID),
 				signalName,
@@ -241,7 +241,7 @@ func (c *VertivCollector) buildDeviceMetrics(instance string, device config.Devi
 			desc,
 			prometheus.GaugeValue,
 			sample.Value,
-			instance,
+			target,
 			device.Name,
 			strconv.Itoa(device.EquipID),
 		))

@@ -44,37 +44,37 @@ func newTHDDescs() thdDescs {
 		temperature: prometheus.NewDesc(
 			"vertiv_thd_temperature_celsius",
 			"Aisle temperature measurement",
-			[]string{"instance", "device", "equip_id", "rack", "aisle", "position"},
+			[]string{"target", "device", "equip_id", "rack", "aisle", "position"},
 			nil,
 		),
 		humidity: prometheus.NewDesc(
 			"vertiv_thd_humidity_percent",
 			"Aisle humidity measurement",
-			[]string{"instance", "device", "equip_id", "rack", "aisle"},
+			[]string{"target", "device", "equip_id", "rack", "aisle"},
 			nil,
 		),
 		doorStatus: prometheus.NewDesc(
 			"vertiv_thd_door_status",
 			"Aisle door status (0=Normal, 1=Open/Abnormal)",
-			[]string{"instance", "device", "equip_id", "rack", "aisle"},
+			[]string{"target", "device", "equip_id", "rack", "aisle"},
 			nil,
 		),
 		commStatus: prometheus.NewDesc(
 			"vertiv_thd_comm_status",
 			"THD sensor communication status (0=Normal, 1=Fault)",
-			[]string{"instance", "device", "equip_id", "rack"},
+			[]string{"target", "device", "equip_id", "rack"},
 			nil,
 		),
 		rackID: prometheus.NewDesc(
 			"vertiv_thd_rack_id",
 			"Rack identifier mapping from the Vertiv THD subsystem",
-			[]string{"instance", "device", "equip_id", "rack"},
+			[]string{"target", "device", "equip_id", "rack"},
 			nil,
 		),
 		highTempAlarmCount: prometheus.NewDesc(
 			"vertiv_thd_high_temp_alarm_rack_count",
 			"Number of racks with active high temperature alarm",
-			[]string{"instance", "device", "equip_id"},
+			[]string{"target", "device", "equip_id"},
 			nil,
 		),
 	}
@@ -88,8 +88,8 @@ func isTHDDevice(device config.Device) bool {
 	return device.EquipID == 5005 || strings.Contains(name, "THD")
 }
 
-func buildTHDMetrics(descs thdDescs, instance string, device config.Device, samples map[int]client.Sample) []prometheus.Metric {
-	base := []string{instance, device.Name, strconv.Itoa(device.EquipID)}
+func buildTHDMetrics(descs thdDescs, target string, device config.Device, samples map[int]client.Sample) []prometheus.Metric {
+	base := []string{target, device.Name, strconv.Itoa(device.EquipID)}
 	metrics := make([]prometheus.Metric, 0, len(samples))
 
 	for fieldID, sample := range samples {

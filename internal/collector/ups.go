@@ -105,10 +105,10 @@ type upsMetricSpec struct {
 }
 
 func newUPSDescs() upsDescs {
-	base := []string{"instance", "device", "equip_id"}
-	withPhase := []string{"instance", "device", "equip_id", "phase"}
-	withLine := []string{"instance", "device", "equip_id", "line"}
-	withScopePhase := []string{"instance", "device", "equip_id", "scope", "phase"}
+	base := []string{"target", "device", "equip_id"}
+	withPhase := []string{"target", "device", "equip_id", "phase"}
+	withLine := []string{"target", "device", "equip_id", "line"}
+	withScopePhase := []string{"target", "device", "equip_id", "scope", "phase"}
 
 	return upsDescs{
 		inputPhaseVoltage:          prometheus.NewDesc("vertiv_ups_input_phase_voltage_volts", "UPS input phase voltage", withPhase, nil),
@@ -234,8 +234,8 @@ func isUPSDevice(device config.Device) bool {
 	return strings.Contains(strings.ToUpper(device.Name), "UPS")
 }
 
-func buildUPSMetrics(descs upsDescs, instance string, device config.Device, samples map[int]client.Sample) []prometheus.Metric {
-	base := []string{instance, device.Name, strconv.Itoa(device.EquipID)}
+func buildUPSMetrics(descs upsDescs, target string, device config.Device, samples map[int]client.Sample) []prometheus.Metric {
+	base := []string{target, device.Name, strconv.Itoa(device.EquipID)}
 	metrics := make([]prometheus.Metric, 0, len(samples))
 
 	for fieldID, sample := range samples {
