@@ -1,5 +1,6 @@
 # Local runtime config
 config.yaml
+deploy/production/values.yaml
 
 # Go build and module caches used in this workspace
 .gocache/

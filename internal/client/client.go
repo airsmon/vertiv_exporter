@@ -18,6 +18,7 @@ import (
 
 type Client struct {
 	host          string
+	baseURL       *url.URL
 	username      string
 	password      string
 	debugResponse bool
@@ -26,22 +27,19 @@ type Client struct {
 }
 
 func NewClient(host string, skipTLS bool, username, password string, debugResponse bool) (*Client, error) {
-	jar, err := cookiejar.New(nil)
-	if err != nil {
-		return nil, fmt.Errorf("create cookie jar: %w", err)
-	}
-
 	baseURL, err := url.Parse(host)
 	if err != nil {
 		return nil, fmt.Errorf("parse host: %w", err)
 	}
 
-	jar.SetCookies(baseURL, []*http.Cookie{
-		{Name: "language", Value: "English"},
-	})
+	jar, err := newCookieJar(baseURL)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Client{
 		host:          strings.TrimRight(host, "/"),
+		baseURL:       baseURL,
 		username:      username,
 		password:      password,
 		debugResponse: debugResponse,
@@ -59,6 +57,19 @@ func NewClient(host string, skipTLS bool, username, password string, debugRespon
 }
 
 func (c *Client) Login(ctx context.Context) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return c.loginLocked(ctx)
+}
+
+func (c *Client) loginLocked(ctx context.Context) error {
+	jar, err := newCookieJar(c.baseURL)
+	if err != nil {
+		return err
+	}
+	c.httpClient.Jar = jar
+
 	form := url.Values{
 		"user_name":     []string{encodeCredential(c.username)},
 		"user_password": []string{encodeCredential(c.password)},
@@ -87,6 +98,17 @@ func (c *Client) Login(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func newCookieJar(baseURL *url.URL) (http.CookieJar, error) {
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		return nil, fmt.Errorf("create cookie jar: %w", err)
+	}
+	jar.SetCookies(baseURL, []*http.Cookie{
+		{Name: "language", Value: "English"},
+	})
+	return jar, nil
 }
 
 func (c *Client) KeepAlive(ctx context.Context) error {
@@ -139,13 +161,12 @@ func (c *Client) doLocked(ctx context.Context, method, path string, query url.Va
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusFound {
+	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusFound {
+		_ = resp.Body.Close()
 		if !allowRelogin {
 			return nil, fmt.Errorf("authentication failed with status %d", resp.StatusCode)
 		}
-		if err := c.Login(ctx); err != nil {
+		if err := c.loginLocked(ctx); err != nil {
 			return nil, err
 		}
 		return c.doLocked(ctx, method, path, query, false)
@@ -153,15 +174,38 @@ func (c *Client) doLocked(ctx context.Context, method, path string, query url.Va
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
+		_ = resp.Body.Close()
 		return nil, fmt.Errorf("unexpected status %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
 	}
 
 	body, err := io.ReadAll(resp.Body)
+	_ = resp.Body.Close()
 	if err != nil {
 		return nil, fmt.Errorf("read response body: %w", err)
 	}
+	if isLoginRedirect(body) {
+		if !allowRelogin {
+			return nil, fmt.Errorf("authentication failed after login retry")
+		}
+		if err := c.loginLocked(ctx); err != nil {
+			return nil, err
+		}
+		return c.doLocked(ctx, method, path, query, false)
+	}
 
 	return body, nil
+}
+
+func isLoginRedirect(body []byte) bool {
+	const maxLoginRedirectSize = 2048
+
+	if len(body) > maxLoginRedirectSize {
+		return false
+	}
+	normalized := strings.ToLower(string(body))
+	return strings.Contains(normalized, "<html") &&
+		strings.Contains(normalized, "window.open") &&
+		strings.Contains(normalized, "/cgi-bin/index.cgi")
 }
 
 func encodeCredential(raw string) string {

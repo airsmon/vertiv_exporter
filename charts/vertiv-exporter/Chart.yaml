@@ -2,8 +2,8 @@ apiVersion: v2
 name: vertiv-exporter
 description: Prometheus exporter for Vertiv devices
 type: application
-version: 0.1.0
-appVersion: "1.0.1"
+version: 0.1.1
+appVersion: "1.0.2"
 home: https://github.com/airsmon/vertiv_exporter
 sources:
   - https://github.com/airsmon/vertiv_exporter
