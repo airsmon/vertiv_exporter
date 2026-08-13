@@ -366,6 +366,7 @@
         "y": 6
       },
       "id": 11,
+      "description": "Vertiv SmartRow 2 RDU-THD factory defaults: cold aisle 18–27°C and hot aisle 18–40°C. A single out-of-range sensor is a warning; rack high-temperature alarms are shown separately.",
       "options": {
         "legend": {
           "calcs": [
@@ -447,6 +448,7 @@
         "y": 6
       },
       "id": 12,
+      "description": "Vertiv SmartRow 2 RDU-THD factory default humidity range is 8–95%. A single out-of-range sensor is a warning, not a critical rack alarm.",
       "options": {
         "legend": {
           "calcs": [
@@ -497,8 +499,8 @@
                   "text": "Normal"
                 },
                 "1": {
-                  "color": "red",
-                  "text": "Open / Fault"
+                  "color": "yellow",
+                  "text": "Open / Maintenance"
                 }
               },
               "type": "value"
@@ -512,7 +514,7 @@
                 "value": null
               },
               {
-                "color": "red",
+                "color": "yellow",
                 "value": 1
               }
             ]
@@ -527,6 +529,7 @@
         "y": 14
       },
       "id": 13,
+      "description": "Vertiv SmartRow 2 classifies an open door as Maintenance rather than Alarm, so the open state is yellow instead of red.",
       "options": {
         "alignValue": "left",
         "legend": {
@@ -1395,6 +1398,7 @@
         "y": 46
       },
       "id": 28,
+      "description": "Inventory table. Each metric keeps the unit documented by the exporter; lifetime energy is shown separately in MWh to avoid mixing kWh with percent, minutes, seconds, and days.",
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1414,7 +1418,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "max without (instance, pod, exported_instance) (label_replace({__name__=~\"vertiv_ups_(battery_(capacity_percent|backup_time_minutes|discharging_time_seconds|discharge_count_total)|input_energy_kwh_total|output_energy_kwh_total|ambient_temperature_celsius|running_time_days|parallel_machine_count)\",job=~\"$job\",target=~\"$target\",target!=\"\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\") or label_replace(label_replace({__name__=~\"vertiv_ups_(battery_(capacity_percent|backup_time_minutes|discharging_time_seconds|discharge_count_total)|input_energy_kwh_total|output_energy_kwh_total|ambient_temperature_celsius|running_time_days|parallel_machine_count)\",job=~\"$job\",target=\"\",exported_instance=~\"$target\",exported_instance!=\"\"}, \"target\", \"$1\", \"exported_instance\", \"(.+)\"), \"metric\", \"$1\", \"__name__\", \"(.+)\"))",
+          "expr": "max without (instance, pod, exported_instance) (label_replace({__name__=~\"vertiv_ups_(battery_(capacity_percent|backup_time_minutes|discharging_time_seconds|discharge_count_total)|ambient_temperature_celsius|running_time_days|parallel_machine_count)\",job=~\"$job\",target=~\"$target\",target!=\"\"}, \"metric\", \"$1\", \"__name__\", \"(.+)\") or label_replace(label_replace({__name__=~\"vertiv_ups_(battery_(capacity_percent|backup_time_minutes|discharging_time_seconds|discharge_count_total)|ambient_temperature_celsius|running_time_days|parallel_machine_count)\",job=~\"$job\",target=\"\",exported_instance=~\"$target\",exported_instance!=\"\"}, \"target\", \"$1\", \"exported_instance\", \"(.+)\"), \"metric\", \"$1\", \"__name__\", \"(.+)\"))",
           "format": "table",
           "instant": true,
           "legendFormat": "{{metric}}",
@@ -1422,7 +1426,7 @@
           "refId": "A"
         }
       ],
-      "title": "UPS Battery, Energy & Runtime",
+      "title": "UPS Battery & Runtime Inventory",
       "type": "table"
     },
     {
@@ -1436,7 +1440,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 24,
+        "w": 12,
         "x": 0,
         "y": 54
       },
@@ -1470,6 +1474,98 @@
       ],
       "title": "UPS Status Values",
       "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "Lifetime counters exported in kWh and divided by 1000 for display as MWh. These counters have no health threshold; use power, load, battery, and alarm panels for current health.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 3,
+          "unit": "mwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 54
+      },
+      "id": 30,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "max without (instance, pod, exported_instance) (vertiv_ups_input_energy_kwh_total{job=~\"$job\",target=~\"$target\",target!=\"\"} or label_replace(vertiv_ups_input_energy_kwh_total{job=~\"$job\",target=\"\",exported_instance=~\"$target\",exported_instance!=\"\"}, \"target\", \"$1\", \"exported_instance\", \"(.+)\")) / 1000",
+          "legendFormat": "{{device}} lifetime input",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "max without (instance, pod, exported_instance) (vertiv_ups_output_energy_kwh_total{job=~\"$job\",target=~\"$target\",target!=\"\"} or label_replace(vertiv_ups_output_energy_kwh_total{job=~\"$job\",target=\"\",exported_instance=~\"$target\",exported_instance!=\"\"}, \"target\", \"$1\", \"exported_instance\", \"(.+)\")) / 1000",
+          "legendFormat": "{{device}} lifetime output",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "UPS Lifetime Energy (MWh)",
+      "type": "timeseries"
     },
     {
       "collapsed": false,
@@ -1533,6 +1629,7 @@
         "y": 63
       },
       "id": 41,
+      "description": "Includes discharge temperature. Vertiv public CRV/CRD documentation does not publish one universal high-discharge-temperature setpoint; keep the trend informational and use the controller alarm state for health.",
       "options": {
         "legend": {
           "calcs": [
@@ -1691,6 +1788,7 @@
         "y": 72
       },
       "id": 43,
+      "description": "Includes discharge pressure. Vertiv CRV+ documents a 37 bar R410A high-pressure switch point and no discharge-pressure lower fault limit; values below 20 bar must not be colored as faults.",
       "options": {
         "legend": {
           "calcs": [
